@@ -43,7 +43,7 @@ class KippoSFTPFile:
             del attrs["permissions"]
         else:
             mode = 0777
-        fd = server.fs.open(filename, openFlags, mode )
+        fd = server.fs.open(filename, openFlags, mode)
         if attrs:
             self.server.setAttrs(filename, attrs)
         self.fd = fd
@@ -52,17 +52,17 @@ class KippoSFTPFile:
         return self.server.fs.close(self.fd)
 
     def readChunk(self, offset, length):
-	if ( self.transfer_completed == 1 ):
+        # FIXME this limits us to the maximum of 1 chunk, typically 32K
+	if (self.transfer_completed == 1):
             return ""
-	print "readChunk: %s %s" % ( offset, length )
-        # this limits us to the maximum of 1 chunk, typically 32K
-	contents = self.server.fs.file_contents( self.filename )
+	print "readChunk: %s %s" % (offset, length)
+	contents = self.server.fs.file_contents(self.filename)
 	self.transfer_completed = 1
 	return contents
 
     def writeChunk(self, offset, data):
-	self.server.fs.lseek( self.fd, offset )
-	self.server.fs.write( self.fd,data)
+	self.server.fs.lseek(self.fd, offset)
+	self.server.fs.write(self.fd, data)
 
     def getAttrs(self):
         s = self.server.fs.fstat(self.fd)
@@ -75,7 +75,7 @@ class KippoSFTPDirectory:
 
     def __init__(self, server, directory):
         self.server = server
-        self.files = server.fs.listdir( directory )
+        self.files = server.fs.listdir(directory)
         self.dir = directory
 
     def __iter__(self):
@@ -87,7 +87,7 @@ class KippoSFTPDirectory:
         except IndexError:
             raise StopIteration
         else:
-            s = self.server.fs.lstat( os.path.join(self.dir, f))
+            s = self.server.fs.lstat(os.path.join(self.dir, f))
             longname = lsLine(f, s)
             attrs = self.server._getAttrs(s)
             return (f, longname, attrs)
@@ -98,9 +98,9 @@ class KippoSFTPDirectory:
 class KippoSFTPServer:
     implements(conchinterfaces.ISFTPServer)
 
-    def __init__( self, avatar ):
+    def __init__(self, avatar):
 	self.avatar = avatar
-	# we shouldn't copy fs here, but at avatar instantiation
+	# FIXME we should not copy fs here, but do this at avatar instantiation
         self.fs = fs.HoneyPotFilesystem(deepcopy(self.avatar.env.fs))
 
     def _absPath(self, path):
@@ -158,9 +158,9 @@ class KippoSFTPServer:
 	print "SFTP getAttrs: %s" % path
         path = self._absPath(path)
         if followLinks:
-            s = self.fs.stat( path)
+            s = self.fs.stat(path)
         else:
-            s = self.fs.lstat( path)
+            s = self.fs.lstat(path)
         return self._getAttrs(s)
 
     def setAttrs(self, path, attrs):

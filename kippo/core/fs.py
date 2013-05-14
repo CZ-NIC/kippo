@@ -179,70 +179,88 @@ class HoneyPotFilesystem(object):
 
     # additions for SFTP support, try to keep functions here similar to os.*
 
-    def open( self, filename, openFlags, mode ):
+    def open(self, filename, openFlags, mode):
 	print "open %s" % filename
-	if ( openFlags & os.O_RDONLY == os.O_RDONLY ):
-            print "open rdonly"
+	if (openFlags & os.O_RDONLY == os.O_RDONLY):
 	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
+            print "open rdonly"
 
-	if ( openFlags & os.O_WRONLY == os.O_WRONLY ):
+	if (openFlags & os.O_WRONLY == os.O_WRONLY):
             safeoutfile = '%s/%s_%s' % \
 	       	     (config().get('honeypot', 'download_path'),
 	            time.strftime('%Y%m%d%H%M%S'),
 	            re.sub('[^A-Za-z0-9]', '_', filename))
             print "open file for writing, saving to %s" % safeoutfile
-            # could have function here to add it to the fake file system as well
-            #mkfile( path, uid, gid, size, mode, ctime = None):
-            return os.open( safeoutfile, openFlags, mode )
+            # FIXME could have function here to add it to the fake file system as well
+            #mkfile(path, uid, gid, size, mode, ctime = None):
+            return os.open(safeoutfile, openFlags, mode)
 
-	if ( openFlags & os.O_RDWR == os.O_RDWR ):
+	if (openFlags & os.O_RDWR == os.O_RDWR):
 		print "open rdwr"
 
-	if ( openFlags & os.O_APPEND == os.O_APPEND ):
+	if (openFlags & os.O_APPEND == os.O_APPEND):
 		print "open append"
 
-	if ( openFlags & os.O_CREAT == os.O_CREAT ):
+	if (openFlags & os.O_CREAT == os.O_CREAT):
 		print "open creat"
 
-	if ( openFlags & os.O_TRUNC == os.O_TRUNC ):
+	if (openFlags & os.O_TRUNC == os.O_TRUNC):
 		print "open trunc"
 
-	if ( openFlags & os.O_EXCL == os.O_EXCL ):
+	if (openFlags & os.O_EXCL == os.O_EXCL):
 		print "open excl"
 
 	return None
 
-#        self.fs._setAttrs( path, attrs )
-
-#    # conflicts with existing mkdir
-#    def mkdir( self, path ):
+#    FIXME conflicts with existing mkdir
+#    def mkdir(self, path):
 #	raise notImplementedError
 
-    def rmdir( self, path ):
+    def rmdir(self, path):
 	raise notImplementedError
 
-    def utime( self, path, atime, mtime ):
+    def utime(self, path, atime, mtime):
+        p = self.getfile(path)
+        if (p == False):
+            return 
+        p[A_CTIME] = mtime
+
+    def chmod(self, path, perm):
+	# FIXME does this also work for directories?
+        p = self.getfile(path)
+        if (p == False): 
+            return
+        p[A_MODE] = perm
+
+    def chown(self, path, uid, gid):
+        # FIXME does this also work for directories?
+        p = self.getfile(path)
+        if (p == False):
+            return 
+        if (uid != -1):
+            p[A_UID] = uid
+        if (gid != -1):
+            p[A_GID] = gid
+
+    def remove(self, filename):
+        # FIXME does this also work for directories?
+        p = self.getfile(path)
+        if (p == False):
+            return 
+        # remove somehow
+
+    def readlink(self, path):
 	raise notImplementedError
 
-    def chmod( self, path, perm ):
+    def symlink(self, targetPath, linkPath):
 	raise notImplementedError
 
-    def chown( self, path, uid, gid ):
-	raise notImplementedError
+    def rename(self, oldpath, newpath):
+        # FIXME needs more logic to handle directory moves
+        p = self.getfile(path)
+	p[A_NAME] = newpath
 
-    def remove( self, filename ):
-	raise notImplementedError
-
-    def readlink( self, path ):
-	raise notImplementedError
-
-    def symlink( self, targetPath, linkPath ):
-	raise notImplementedError
-
-    def rename( self, oldpath, newpath ):
-	raise notImplementedError
-
-    def read( self, fd, size ):
+    def read(self, fd, size):
 	# this should not be called, we intercept at readChunk in sftp.py
 	raise notImplementedError
 
@@ -250,30 +268,30 @@ class HoneyPotFilesystem(object):
 	return os.write(fd, string)
 
     def close(self, fd):
-	if ( fd == None ): 
+	if (fd == None): 
 		return True
 	return os.close(fd)
 
-    def lseek( self, fd, offset, whence ):
-	if ( fd == None ):
+    def lseek(self, fd, offset, whence):
+	if (fd == None):
 		return True
-	return os.lseek( fd, offset, whence )
+	return os.lseek(fd, offset, whence)
 
     # compatibility with os.listdir
-    def listdir( self, path ):
+    def listdir(self, path):
         names = [x[A_NAME] for x in self.get_path(path)]
 	return names
 
     # our own stat function. need to treat / as exception
-    def stat( self, path ):
+    def stat(self, path):
 
-        if ( path == "/" ):
+        if (path == "/"):
             p = { A_NAME:'/', A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
             #p = ['.', T_DIR, 0, 0, 4096, 16877, time.time(), [], None])
         else:
-            p = self.getfile( path )
+            p = self.getfile(path)
 
-        return _statobj( 
+        return _statobj(
       	 p[A_MODE],
 	 0,
 	 0,
@@ -283,15 +301,15 @@ class HoneyPotFilesystem(object):
 	 p[A_SIZE],
 	 p[A_CTIME],
 	 p[A_CTIME],
-	 p[A_CTIME] )
+	 p[A_CTIME])
 
     # for now, ignore symlinks
-    def lstat( self, path ):
-	return self.stat( path )
+    def lstat(self, path):
+	return self.stat(path)
 
 # transform a tuple into a stat object
 class _statobj:
-    def __init__( self, st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime, st_mtime, st_ctime ):
+    def __init__(self, st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime, st_mtime, st_ctime):
         self.st_mode = st_mode
         self.st_ino = st_ino
         self.st_dev = st_dev
