@@ -861,8 +861,9 @@ class KippoSFTPServer:
     def makeDirectory(self, path, attrs):
 	print "SFTP makeDirectory: %s" % path
         path = self._absPath(path)
-        self.fs.mkdir(path)
+        self.fs.mkdir2(path)
         self._setAttrs(path, attrs)
+        return 
 
     def removeDirectory(self, path):
 	print "SFTP removeDirectory: %s" % path

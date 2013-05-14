@@ -1,7 +1,7 @@
 # Copyright (c) 2009 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
 
-import os, time, fnmatch, re
+import os, time, fnmatch, re, stat
 from kippo.core.config import config
 
 A_NAME, \
@@ -14,6 +14,7 @@ A_NAME, \
     A_CONTENTS, \
     A_TARGET, \
     A_REALFILE = range(0, 10)
+
 T_LINK, \
     T_DIR, \
     T_FILE, \
@@ -151,6 +152,7 @@ class HoneyPotFilesystem(object):
         return True
 
     def mkdir(self, path, uid, gid, size, mode, ctime = None):
+        print "mkdir(%s,%s,%s,%s,%s)" % ( path, uid, gid, size, mode )
         if self.newcount > 10000:
             return False
         if ctime is None:
@@ -212,9 +214,11 @@ class HoneyPotFilesystem(object):
 
 	return None
 
-#    FIXME conflicts with existing mkdir
-#    def mkdir(self, path):
-#	raise notImplementedError
+    # FIXME mkdir() name conflicts with existing mkdir
+    def mkdir2(self, path):
+        if self.exists(path):
+            return
+        return self.mkdir(path, 0, 0, 4096, 16877) 
 
     def rmdir(self, path):
 	raise notImplementedError
@@ -226,14 +230,12 @@ class HoneyPotFilesystem(object):
         p[A_CTIME] = mtime
 
     def chmod(self, path, perm):
-	# FIXME does this also work for directories?
         p = self.getfile(path)
         if (p == False): 
             return
-        p[A_MODE] = perm
+	p[A_MODE] = stat.S_IFMT(p[A_MODE]) | perm
 
     def chown(self, path, uid, gid):
-        # FIXME does this also work for directories?
         p = self.getfile(path)
         if (p == False):
             return 
@@ -256,8 +258,8 @@ class HoneyPotFilesystem(object):
 	raise notImplementedError
 
     def rename(self, oldpath, newpath):
-        # FIXME needs more logic to handle directory moves
-        p = self.getfile(path)
+        # do two things, modify A_NAME and modify the contents of its directory
+        p = self.getfile(oldpath)
 	p[A_NAME] = newpath
 
     def read(self, fd, size):
@@ -286,8 +288,7 @@ class HoneyPotFilesystem(object):
     def stat(self, path):
 
         if (path == "/"):
-            p = { A_NAME:'/', A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
-            #p = ['.', T_DIR, 0, 0, 4096, 16877, time.time(), [], None])
+            p = { A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
         else:
             p = self.getfile(path)
 
@@ -322,6 +323,6 @@ class _statobj:
         self.st_size = st_size
         self.st_atime = st_atime
         self.st_mtime = st_mtime
-        self.st_atime = st_atime
+        self.st_ctime = st_ctime
 
 # vim: set sw=4 et:
