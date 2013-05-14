@@ -1,0 +1,7 @@
+System     1K-blocks    Used Available Use% Mounted on
+/dev/sda1        8362320 2046908   5895984  26% /
+udev              294220       8    294212   1% /dev
+tmpfs             120872     228    120644   1% /run
+none                5120       0      5120   0% /run/lock
+none              302176       0    302176   0% /run/shm
+/dev/sdf1         186663   16560    160466  10% /home
