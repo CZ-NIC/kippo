@@ -431,7 +431,9 @@ class LoggingServerProtocol(insults.ServerProtocol):
 
 class HoneyPotSSHSession(session.SSHSession):
     def request_env(self, data):
-        print 'request_env: %s' % (repr(data))
+        name, rest = getNS( data ) 
+        value, rest = getNS( rest )
+        print 'request_env: %s=%s' % ( name, value )
 
 class HoneyPotAvatar(avatar.ConchUser):
     implements(conchinterfaces.ISession)
