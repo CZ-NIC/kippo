@@ -441,7 +441,7 @@ class HoneyPotAvatar(avatar.ConchUser):
         self.username = username
         self.env = env
         self.channelLookup.update({'session': HoneyPotSSHSession})
-        self.subsystemLookup['sftp'] = filetransfer.FileTransferServer
+        self.subsystemLookup.update({'sftp']: KippoSFTPServer})
 
         userdb = UserDB()
         self.uid = self.gid = userdb.getUID(self.username)

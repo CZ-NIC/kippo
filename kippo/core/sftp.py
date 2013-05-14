@@ -95,7 +95,7 @@ class KippoSFTPDirectory:
     def close(self):
         self.files = []
 
-class HoneyPotSFTPServer:
+class KippoSFTPServer:
     implements(conchinterfaces.ISFTPServer)
 
     def __init__( self, avatar ):
@@ -185,7 +185,5 @@ class HoneyPotSFTPServer:
 
     def extendedRequest(self, extName, extData):
         raise NotImplementedError
-
-components.registerAdapter( HoneyPotSFTPServer, HoneyPotAvatar, ISFTPServer)
 
 # vim: set sw=4 et:
