@@ -245,11 +245,12 @@ class HoneyPotFilesystem(object):
             p[A_GID] = gid
 
     def remove(self, filename):
-        # FIXME does this also work for directories?
         p = self.getfile(path)
         if (p == False):
             return 
-        # remove somehow
+
+	raise notImplementedError
+        # FIXME remove entry & remove from parent contents
 
     def readlink(self, path):
 	raise notImplementedError
@@ -258,9 +259,11 @@ class HoneyPotFilesystem(object):
 	raise notImplementedError
 
     def rename(self, oldpath, newpath):
-        # do two things, modify A_NAME and modify the contents of its directory
         p = self.getfile(oldpath)
-	p[A_NAME] = newpath
+	if (p == False):
+            return
+	raise notImplementedError
+        # FIXME do two things, modify A_NAME and modify the contents of its directory
 
     def read(self, fd, size):
 	# this should not be called, we intercept at readChunk in sftp.py
@@ -271,13 +274,13 @@ class HoneyPotFilesystem(object):
 
     def close(self, fd):
 	if (fd == None): 
-		return True
+            return True
 	return os.close(fd)
 
     def lseek(self, fd, offset, whence):
-	if (fd == None):
-		return True
-	return os.lseek(fd, offset, whence)
+        if (fd == None):
+            return True
+        return os.lseek(fd, offset, whence)
 
     # compatibility with os.listdir
     def listdir(self, path):
