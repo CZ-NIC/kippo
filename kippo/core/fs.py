@@ -1,7 +1,7 @@
 # Copyright (c) 2009 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
 
-import os, time, fnmatch
+import os, time, fnmatch, re
 from kippo.core.config import config
 
 A_NAME, \
@@ -176,5 +176,131 @@ class HoneyPotFilesystem(object):
         if l:
             return True
         return False
+
+    # additions for SFTP support, try to keep functions here similar to os.*
+
+    def open( self, filename, openFlags, mode ):
+	print "open %s" % filename
+	if ( openFlags & os.O_RDONLY == os.O_RDONLY ):
+            print "open rdonly"
+	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
+
+	if ( openFlags & os.O_WRONLY == os.O_WRONLY ):
+            safeoutfile = '%s/%s_%s' % \
+	       	     (config().get('honeypot', 'download_path'),
+	            time.strftime('%Y%m%d%H%M%S'),
+	            re.sub('[^A-Za-z0-9]', '_', filename))
+            print "open file for writing, saving to %s" % safeoutfile
+            # could have function here to add it to the fake file system as well
+            #mkfile( path, uid, gid, size, mode, ctime = None):
+            return os.open( safeoutfile, openFlags, mode )
+
+	if ( openFlags & os.O_RDWR == os.O_RDWR ):
+		print "open rdwr"
+
+	if ( openFlags & os.O_APPEND == os.O_APPEND ):
+		print "open append"
+
+	if ( openFlags & os.O_CREAT == os.O_CREAT ):
+		print "open creat"
+
+	if ( openFlags & os.O_TRUNC == os.O_TRUNC ):
+		print "open trunc"
+
+	if ( openFlags & os.O_EXCL == os.O_EXCL ):
+		print "open excl"
+
+	return None
+
+#        self.fs._setAttrs( path, attrs )
+
+#    # conflicts with existing mkdir
+#    def mkdir( self, path ):
+#	raise notImplementedError
+
+    def rmdir( self, path ):
+	raise notImplementedError
+
+    def utime( self, path, atime, mtime ):
+	raise notImplementedError
+
+    def chmod( self, path, perm ):
+	raise notImplementedError
+
+    def chown( self, path, uid, gid ):
+	raise notImplementedError
+
+    def remove( self, filename ):
+	raise notImplementedError
+
+    def readlink( self, path ):
+	raise notImplementedError
+
+    def symlink( self, targetPath, linkPath ):
+	raise notImplementedError
+
+    def rename( self, oldpath, newpath ):
+	raise notImplementedError
+
+    def read( self, fd, size ):
+	# this should not be called, we intercept at readChunk in sftp.py
+	raise notImplementedError
+
+    def write(self, fd, string):
+	return os.write(fd, string)
+
+    def close(self, fd):
+	if ( fd == None ): 
+		return True
+	return os.close(fd)
+
+    def lseek( self, fd, offset, whence ):
+	if ( fd == None ):
+		return True
+	return os.lseek( fd, offset, whence )
+
+    # compatibility with os.listdir
+    def listdir( self, path ):
+        names = [x[A_NAME] for x in self.get_path(path)]
+	return names
+
+    # our own stat function. need to treat / as exception
+    def stat( self, path ):
+
+        if ( path == "/" ):
+            p = { A_NAME:'/', A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
+            #p = ['.', T_DIR, 0, 0, 4096, 16877, time.time(), [], None])
+        else:
+            p = self.getfile( path )
+
+        return _statobj( 
+      	 p[A_MODE],
+	 0,
+	 0,
+	 1,
+	 p[A_UID],
+	 p[A_GID],
+	 p[A_SIZE],
+	 p[A_CTIME],
+	 p[A_CTIME],
+	 p[A_CTIME] )
+
+    # for now, ignore symlinks
+    def lstat( self, path ):
+	return self.stat( path )
+
+# transform a tuple into a stat object
+class _statobj:
+    def __init__( self, st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime, st_mtime, st_ctime ):
+        self.st_mode = st_mode
+        self.st_ino = st_ino
+        self.st_dev = st_dev
+        self.st_nlink = st_nlink
+        self.st_uid = st_uid
+        self.st_gid = st_gid
+        self.st_size = st_size
+        self.st_atime = st_atime
+        self.st_mtime = st_mtime
+        self.st_atime = st_atime
 
 # vim: set sw=4 et:
