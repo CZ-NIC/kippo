@@ -307,6 +307,9 @@ class HoneyPotFilesystem(object):
     def lstat(self, path):
 	return self.stat(path)
 
+    def realpath(self, path):
+        return path
+
 # transform a tuple into a stat object
 class _statobj:
     def __init__(self, st_mode, st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime, st_mtime, st_ctime):
