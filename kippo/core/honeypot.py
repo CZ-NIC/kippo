@@ -741,6 +741,7 @@ class KippoSFTPFile:
         self.server = server
 	self.filename = filename
 	self.transfer_completed = 0
+        self.bytes_written = 0
         openFlags = 0
         if flags & FXF_READ == FXF_READ and flags & FXF_WRITE == 0:
             openFlags = os.O_RDONLY
@@ -766,21 +767,21 @@ class KippoSFTPFile:
             self.server.setAttrs(filename, attrs)
         self.fd = fd
 
+        # cache a copy of file in memory to read from in readChunk
+        if flags & FXF_READ == FXF_READ:
+            self.contents = self.server.fs.file_contents(self.filename)
+
     def close(self):
+        # FIXME we can update the filesize in fake file system with total written bytes here
         return self.server.fs.close(self.fd)
 
     def readChunk(self, offset, length):
-        # FIXME this limits us to the maximum of 1 chunk, typically 32K
-	if (self.transfer_completed == 1):
-            return ""
-	print "readChunk: %s %s" % (offset, length)
-	contents = self.server.fs.file_contents(self.filename)
-	self.transfer_completed = 1
-	return contents
+        return self.contents[offset:offset+length]
 
     def writeChunk(self, offset, data):
 	self.server.fs.lseek(self.fd, offset, os.SEEK_SET)
 	self.server.fs.write(self.fd, data)
+        self.bytes_written += len(data)
 
     def getAttrs(self):
         s = self.server.fs.fstat(self.fd)
