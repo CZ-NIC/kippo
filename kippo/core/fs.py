@@ -100,6 +100,14 @@ class HoneyPotFilesystem(object):
             print 'Updating realfile to %s' % realfile
             f[A_REALFILE] = realfile
 
+    def update_size(self, filename, size):
+        f = self.getfile(filename)
+        if (f == False): 
+            return
+        if (f[A_TYPE] != T_FILE):
+            return
+        f[A_SIZE] = size
+
     def realfile(self, f, path):
         self.update_realfile(f, path)
         if f[A_REALFILE]:

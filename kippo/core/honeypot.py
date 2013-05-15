@@ -772,7 +772,8 @@ class KippoSFTPFile:
             self.contents = self.server.fs.file_contents(self.filename)
 
     def close(self):
-        # FIXME we can update the filesize in fake file system with total written bytes here
+        if ( self.bytes_written > 0 ):
+            self.server.fs.update_size(self.filename, self.bytes_written) 
         return self.server.fs.close(self.fd)
 
     def readChunk(self, offset, length):
