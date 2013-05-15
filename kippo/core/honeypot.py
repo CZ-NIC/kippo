@@ -779,7 +779,7 @@ class KippoSFTPFile:
 	return contents
 
     def writeChunk(self, offset, data):
-	self.server.fs.lseek(self.fd, offset)
+	self.server.fs.lseek(self.fd, offset, os.SEEK_SET)
 	self.server.fs.write(self.fd, data)
 
     def getAttrs(self):

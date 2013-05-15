@@ -193,8 +193,10 @@ class HoneyPotFilesystem(object):
 	            time.strftime('%Y%m%d%H%M%S'),
 	            re.sub('[^A-Za-z0-9]', '_', filename))
             print "open file for writing, saving to %s" % safeoutfile
-            # FIXME could have function here to add it to the fake file system as well
-            #mkfile(path, uid, gid, size, mode, ctime = None):
+
+            self.mkfile(filename, 0, 0, 0, 33188) 
+            self.update_realfile( self.getfile(filename), safeoutfile)
+
             return os.open(safeoutfile, openFlags, mode)
 
 	if (openFlags & os.O_RDWR == os.O_RDWR):
