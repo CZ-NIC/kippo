@@ -711,8 +711,8 @@ class HoneypotPasswordChecker:
 
 def getRSAKeys():
     cfg = config()
-    public_key = cfg.get('honeypot', 'public_key')
-    private_key = cfg.get('honeypot', 'private_key')
+    public_key = cfg.get('honeypot', 'rsa_public_key')
+    private_key = cfg.get('honeypot', 'rsa_private_key')
     if not (os.path.exists(public_key) and os.path.exists(private_key)):
         # generate a RSA keypair
         print "Generating RSA keypair..."
@@ -722,6 +722,28 @@ def getRSAKeys():
         rsaKey = RSA.generate(KEY_LENGTH, randbytes.secureRandom)
         publicKeyString = keys.Key(rsaKey).public().toString('openssh')
         privateKeyString = keys.Key(rsaKey).toString('openssh')
+        # save keys for next time
+        file(public_key, 'w+b').write(publicKeyString)
+        file(private_key, 'w+b').write(privateKeyString)
+        print "done."
+    else:
+        publicKeyString = file(public_key).read()
+        privateKeyString = file(private_key).read()
+    return publicKeyString, privateKeyString
+
+def getDSAKeys():
+    cfg = config()
+    public_key = cfg.get('honeypot', 'dsa_public_key')
+    private_key = cfg.get('honeypot', 'dsa_private_key')
+    if not (os.path.exists(public_key) and os.path.exists(private_key)):
+        # generate a DSA keypair
+        print "Generating DSA keypair..."
+        from Crypto.PublicKey import DSA
+        from twisted.python import randbytes
+        KEY_LENGTH = 1024
+        dsaKey = DSA.generate(KEY_LENGTH, randbytes.secureRandom)
+        publicKeyString = keys.Key(dsaKey).public().toString('openssh')
+        privateKeyString = keys.Key(dsaKey).toString('openssh')
         # save keys for next time
         file(public_key, 'w+b').write(publicKeyString)
         file(private_key, 'w+b').write(privateKeyString)
