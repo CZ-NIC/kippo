@@ -718,7 +718,7 @@ def getRSAKeys():
         print "Generating RSA keypair..."
         from Crypto.PublicKey import RSA
         from twisted.python import randbytes
-        KEY_LENGTH = 1024
+        KEY_LENGTH = 2048
         rsaKey = RSA.generate(KEY_LENGTH, randbytes.secureRandom)
         publicKeyString = keys.Key(rsaKey).public().toString('openssh')
         privateKeyString = keys.Key(rsaKey).toString('openssh')
