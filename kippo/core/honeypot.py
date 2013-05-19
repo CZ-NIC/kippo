@@ -136,7 +136,7 @@ class HoneyPotShell(object):
         self.runCommand()
 
     def showPrompt(self):
-        if hasattr(self.honeypot.env, 'cmd') and self.honeypot.env.cmd != None:
+        if (self.honeypot.execcmd != None):
             return
 
         if not self.honeypot.user.uid:
@@ -235,9 +235,10 @@ class HoneyPotShell(object):
         self.honeypot.terminal.write(newbuf)
 
 class HoneyPotProtocol(recvline.HistoricRecvLine):
-    def __init__(self, user, env):
+    def __init__(self, user, env, execcmd = None):
         self.user = user
         self.env = env
+        self.execcmd = execcmd
         self.hostname = self.env.cfg.get('honeypot', 'hostname')
         self.fs = fs.HoneyPotFilesystem(deepcopy(self.env.fs))
         if self.fs.exists(user.home):
@@ -281,12 +282,12 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
             '\x09':     self.handle_TAB,
             })
 
-	if hasattr(self.env, 'cmd') and self.env.cmd != None:
-            print 'we have a pushed command "%s"' % self.env.cmd
-            self.cmdstack[0].lineReceived(self.env.cmd)
+        if self.execcmd != None:
+            print 'Running exec cmd "%s"' % self.execcmd
+            self.cmdstack[0].lineReceived(self.execcmd)
             self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
             self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
-            self.env.cmd = None
+            self.execcmd = None
             return
             # self.terminal.transport.session.conn.sendEOF(self)
             # self.terminal.transport.session.conn.transport.loseConnection()
@@ -477,8 +478,7 @@ class HoneyPotAvatar(avatar.ConchUser):
 
     def execCommand(self, protocol, cmd):
         print 'Executing command: "%s"' % cmd
-        self.env.cmd = cmd;
-        serverProtocol = LoggingServerProtocol(HoneyPotProtocol, self, self.env)
+        serverProtocol = LoggingServerProtocol(HoneyPotProtocol, self, self.env, cmd)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
