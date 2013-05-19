@@ -228,7 +228,7 @@ class HoneyPotFilesystem(object):
 	elif openFlags & os.O_RDONLY == os.O_RDONLY:
 	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
             print "fs.open rdonly"
-            raise notImplementedError
+            return None
 
 	return None
 
@@ -311,10 +311,10 @@ class HoneyPotFilesystem(object):
 	return names
 
     # our own stat function. need to treat / as exception
-    def stat(self, path):
+    def lstat(self, path):
 
         if (path == "/"):
-            p = { A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
+            p = { A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
         else:
             p = self.getfile(path)
 
@@ -330,9 +330,20 @@ class HoneyPotFilesystem(object):
 	 p[A_CTIME],
 	 p[A_CTIME])
 
-    # for now, ignore symlinks
-    def lstat(self, path):
-	return self.stat(path)
+    def stat(self, path):
+        if (path == "/"):
+            p = { A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
+        else:
+            p = self.getfile(path)
+
+        if (p == False):
+            raise "no such file"
+
+        #if p[A_MODE] & stat.S_IFLNK == stat.S_IFLNK:
+        if p[A_TYPE] == T_LINK:
+            return self.stat( p[A_TARGET] )
+
+        return self.lstat( path )
 
     def realpath(self, path):
         return path
