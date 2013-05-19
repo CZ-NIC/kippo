@@ -261,13 +261,12 @@ class HoneyPotFilesystem(object):
         if (gid != -1):
             p[A_GID] = gid
 
-    def remove(self, filename):
+    def remove(self, path):
         p = self.getfile(path)
         if p == False:
             raise os.OSError 
-
-	raise notImplementedError
-        # FIXME remove entry & remove from parent contents
+        self.get_path(os.path.dirname(path)).remove(p)
+        return
 
     def readlink(self, path):
         p = self.getfile(path)
