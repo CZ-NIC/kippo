@@ -160,7 +160,7 @@ class HoneyPotFilesystem(object):
         return True
 
     def mkdir(self, path, uid, gid, size, mode, ctime = None):
-        print "mkdir(%s,%s,%s,%s,%s)" % ( path, uid, gid, size, mode )
+        print "mkdir(%s,%s,%s,%s,%s)" % (path, uid, gid, size, mode)
         if self.newcount > 10000:
             return False
         if ctime is None:
@@ -210,7 +210,7 @@ class HoneyPotFilesystem(object):
 
 	elif openFlags & os.O_WRONLY == os.O_WRONLY:
             # ensure we do not save with executable bit set
-            realmode = mode & ~( stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH )
+            realmode = mode & ~(stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
             print "fs.open wronly %s " % os.O_WRONLY
             safeoutfile = '%s/%s_%s' % \
@@ -219,14 +219,13 @@ class HoneyPotFilesystem(object):
 	            re.sub('[^A-Za-z0-9]', '_', filename))
             print "fs.open file for writing, saving to %s" % safeoutfile
 
-            self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode )
-            fd = os.open(safeoutfile, openFlags, realmode )
-            self.update_realfile( self.getfile(filename), safeoutfile)
+            self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode)
+            fd = os.open(safeoutfile, openFlags, realmode)
+            self.update_realfile(self.getfile(filename), safeoutfile)
 
             return fd
 
 	elif openFlags & os.O_RDONLY == os.O_RDONLY:
-	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
             print "fs.open rdonly"
             return None
 
@@ -235,7 +234,7 @@ class HoneyPotFilesystem(object):
     # FIXME mkdir() name conflicts with existing mkdir
     def mkdir2(self, path):
         if self.exists(path):
-            return
+            raise os.OSError
         return self.mkdir(path, 0, 0, 4096, 16877) 
 
     def rmdir(self, path):
@@ -243,20 +242,20 @@ class HoneyPotFilesystem(object):
 
     def utime(self, path, atime, mtime):
         p = self.getfile(path)
-        if (p == False):
-            return 
+        if p == False:
+            raise os.OSError 
         p[A_CTIME] = mtime
 
     def chmod(self, path, perm):
         p = self.getfile(path)
-        if (p == False): 
-            return
+        if p == False: 
+            raise os.OSError
 	p[A_MODE] = stat.S_IFMT(p[A_MODE]) | perm
 
     def chown(self, path, uid, gid):
         p = self.getfile(path)
-        if (p == False):
-            return 
+        if p == False:
+            raise os.OSError 
         if (uid != -1):
             p[A_UID] = uid
         if (gid != -1):
@@ -264,18 +263,18 @@ class HoneyPotFilesystem(object):
 
     def remove(self, filename):
         p = self.getfile(path)
-        if (p == False):
-            return 
+        if p == False:
+            raise os.OSError 
 
 	raise notImplementedError
         # FIXME remove entry & remove from parent contents
 
     def readlink(self, path):
         p = self.getfile(path)
-        if (p == False):
-            return
-        if not ( p[A_MODE] & stat.S_IFLNK ):
-            return
+        if p == False:
+            raise os.OSError
+        if not (p[A_MODE] & stat.S_IFLNK):
+            raise os.OSError
         return p[A_TARGET]
 
     def symlink(self, targetPath, linkPath):
@@ -283,13 +282,13 @@ class HoneyPotFilesystem(object):
 
     def rename(self, oldpath, newpath):
         p = self.getfile(oldpath)
-	if (p == False):
-            return
+	if p == False:
+            raise os.OSError
 	raise notImplementedError
         # FIXME do two things, modify A_NAME and modify the contents of its directory
 
     def read(self, fd, size):
-	# this should not be called, we intercept at readChunk in sftp.py
+	# this should not be called, we intercept at readChunk
 	raise notImplementedError
 
     def write(self, fd, string):
@@ -305,18 +304,22 @@ class HoneyPotFilesystem(object):
             return True
         return os.lseek(fd, offset, whence)
 
-    # compatibility with os.listdir
     def listdir(self, path):
         names = [x[A_NAME] for x in self.get_path(path)]
+        #names.append(".")
+        #names.append("..")
 	return names
 
-    # our own stat function. need to treat / as exception
     def lstat(self, path):
 
+        # need to treat / as exception
         if (path == "/"):
             p = { A_TYPE:T_DIR, A_UID:0, A_GID:0, A_SIZE:4096, A_MODE:16877, A_CTIME:time.time() }
         else:
             p = self.getfile(path)
+
+        if p == False:
+            raise os.OSError
 
         return _statobj(
       	 p[A_MODE],
@@ -337,13 +340,13 @@ class HoneyPotFilesystem(object):
             p = self.getfile(path)
 
         if (p == False):
-            raise "no such file"
+            raise os.OSError
 
         #if p[A_MODE] & stat.S_IFLNK == stat.S_IFLNK:
         if p[A_TYPE] == T_LINK:
-            return self.stat( p[A_TARGET] )
+            return self.stat(p[A_TARGET])
 
-        return self.lstat( path )
+        return self.lstat(path)
 
     def realpath(self, path):
         return path
