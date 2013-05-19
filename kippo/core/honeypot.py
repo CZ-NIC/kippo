@@ -11,7 +11,7 @@ from twisted.internet import reactor, protocol, defer
 from twisted.python import failure, log
 from zope.interface import implements
 from copy import deepcopy, copy
-import sys, os, random, pickle, time, stat, shlex, anydbm
+import sys, os, random, pickle, time, stat, shlex, anydbm, struct
 
 from kippo.core import ttylog, fs, utils
 from kippo.core.userdb import UserDB
@@ -136,6 +136,9 @@ class HoneyPotShell(object):
         self.runCommand()
 
     def showPrompt(self):
+        if hasattr(self.honeypot.env, 'cmd') and self.honeypot.env.cmd != None:
+            return
+
         if not self.honeypot.user.uid:
             prompt = '%s:%%(path)s# ' % self.honeypot.hostname
         else:
@@ -277,6 +280,16 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
             '\x03':     self.handle_CTRL_C,
             '\x09':     self.handle_TAB,
             })
+
+	if hasattr(self.env, 'cmd') and self.env.cmd != None:
+            print 'we have a pushed command "%s"' % self.env.cmd
+            self.cmdstack[0].lineReceived(self.env.cmd)
+            self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
+            self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
+            self.env.cmd = None
+            return
+            # self.terminal.transport.session.conn.sendEOF(self)
+            # self.terminal.transport.session.conn.transport.loseConnection()
 
     def displayMOTD(self):
         try:
@@ -431,9 +444,9 @@ class LoggingServerProtocol(insults.ServerProtocol):
 
 class HoneyPotSSHSession(session.SSHSession):
     def request_env(self, data):
-        name, rest = getNS( data ) 
-        value, rest = getNS( rest )
-        print 'request_env: %s=%s' % ( name, value )
+        name, rest = getNS(data) 
+        value, rest = getNS(rest)
+        print 'request_env: %s=%s' % (name, value)
 
 class HoneyPotAvatar(avatar.ConchUser):
     implements(conchinterfaces.ISession)
@@ -463,7 +476,11 @@ class HoneyPotAvatar(avatar.ConchUser):
         return None
 
     def execCommand(self, protocol, cmd):
-        raise NotImplementedError
+        print 'Executing command: "%s"' % cmd
+        self.env.cmd = cmd;
+        serverProtocol = LoggingServerProtocol(HoneyPotProtocol, self, self.env)
+        serverProtocol.makeConnection(protocol)
+        protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
     def closed(self):
         pass
