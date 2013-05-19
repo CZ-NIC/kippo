@@ -192,14 +192,27 @@ class HoneyPotFilesystem(object):
     def open(self, filename, openFlags, mode):
 	print "fs.open %s" % filename
 
-        # ensure we do not save with executable bit set
-	realmode = mode & ~( stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH )
+        if (openFlags & os.O_APPEND == os.O_APPEND):
+            print "fs.open append"
 
-	if (openFlags & os.O_RDONLY == os.O_RDONLY):
-	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
-            print "fs.open rdonly"
+        if (openFlags & os.O_CREAT == os.O_CREAT):
+            print "fs.open creat"
 
-	if (openFlags & os.O_WRONLY == os.O_WRONLY):
+        if (openFlags & os.O_TRUNC == os.O_TRUNC):
+            print "fs.open trunc"
+
+        if (openFlags & os.O_EXCL == os.O_EXCL):
+            print "fs.open excl"
+
+        if openFlags & os.O_RDWR == os.O_RDWR:
+            print "fs.open rdwr"
+            raise notImplementedError
+
+	elif openFlags & os.O_WRONLY == os.O_WRONLY:
+            # ensure we do not save with executable bit set
+            realmode = mode & ~( stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH )
+
+            print "fs.open wronly %s " % os.O_WRONLY
             safeoutfile = '%s/%s_%s' % \
 	       	     (config().get('honeypot', 'download_path'),
 	            time.strftime('%Y%m%d%H%M%S'),
@@ -207,28 +220,15 @@ class HoneyPotFilesystem(object):
             print "fs.open file for writing, saving to %s" % safeoutfile
 
             self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode )
-
             fd = os.open(safeoutfile, openFlags, realmode )
-
-            print "updating realfile: %s %s" % ( filename, safeoutfile )
             self.update_realfile( self.getfile(filename), safeoutfile)
 
             return fd
 
-	if (openFlags & os.O_RDWR == os.O_RDWR):
-		print "fs.open rdwr"
-
-	if (openFlags & os.O_APPEND == os.O_APPEND):
-		print "fs.open append"
-
-	if (openFlags & os.O_CREAT == os.O_CREAT):
-		print "fs.open creat"
-
-	if (openFlags & os.O_TRUNC == os.O_TRUNC):
-		print "fs.open trunc"
-
-	if (openFlags & os.O_EXCL == os.O_EXCL):
-		print "fs.open excl"
+	elif openFlags & os.O_RDONLY == os.O_RDONLY:
+	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
+            print "fs.open rdonly"
+            raise notImplementedError
 
 	return None
 
@@ -271,7 +271,12 @@ class HoneyPotFilesystem(object):
         # FIXME remove entry & remove from parent contents
 
     def readlink(self, path):
-	raise notImplementedError
+        p = self.getfile(path)
+        if (p == False):
+            return
+        if not ( p[A_MODE] & stat.S_IFLNK ):
+            return
+        return p[A_TARGET]
 
     def symlink(self, targetPath, linkPath):
 	raise notImplementedError
