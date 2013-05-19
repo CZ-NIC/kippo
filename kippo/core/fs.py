@@ -306,8 +306,6 @@ class HoneyPotFilesystem(object):
 
     def listdir(self, path):
         names = [x[A_NAME] for x in self.get_path(path)]
-        #names.append(".")
-        #names.append("..")
 	return names
 
     def lstat(self, path):
