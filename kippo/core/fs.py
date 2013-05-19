@@ -281,11 +281,18 @@ class HoneyPotFilesystem(object):
 	raise notImplementedError
 
     def rename(self, oldpath, newpath):
-        p = self.getfile(oldpath)
-	if p == False:
+        print "rename %s to %s" % (oldpath, newpath)
+        old = self.getfile(oldpath)
+	if old == False:
             raise os.OSError
-	raise notImplementedError
-        # FIXME do two things, modify A_NAME and modify the contents of its directory
+        new = self.getfile(newpath)
+        if new != False:
+            raise os.OSError
+
+        self.get_path(os.path.dirname(oldpath)).remove(old)
+        old[A_NAME] = os.path.basename(newpath)
+        self.get_path(os.path.dirname(newpath)).append(old)
+	return
 
     def read(self, fd, size):
 	# this should not be called, we intercept at readChunk
