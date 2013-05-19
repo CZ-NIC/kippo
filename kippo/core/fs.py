@@ -190,37 +190,45 @@ class HoneyPotFilesystem(object):
     # additions for SFTP support, try to keep functions here similar to os.*
 
     def open(self, filename, openFlags, mode):
-	print "open %s" % filename
+	print "fs.open %s" % filename
+
+        # ensure we do not save with executable bit set
+	realmode = mode & ~( stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH )
+
 	if (openFlags & os.O_RDONLY == os.O_RDONLY):
 	    # this should not be called, it'll already be intercepted by readChunk in sftp.py
-            print "open rdonly"
+            print "fs.open rdonly"
 
 	if (openFlags & os.O_WRONLY == os.O_WRONLY):
             safeoutfile = '%s/%s_%s' % \
 	       	     (config().get('honeypot', 'download_path'),
 	            time.strftime('%Y%m%d%H%M%S'),
 	            re.sub('[^A-Za-z0-9]', '_', filename))
-            print "open file for writing, saving to %s" % safeoutfile
+            print "fs.open file for writing, saving to %s" % safeoutfile
 
-            self.mkfile(filename, 0, 0, 0, 33188) 
+            self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode )
+
+            fd = os.open(safeoutfile, openFlags, realmode )
+
+            print "updating realfile: %s %s" % ( filename, safeoutfile )
             self.update_realfile( self.getfile(filename), safeoutfile)
 
-            return os.open(safeoutfile, openFlags, mode)
+            return fd
 
 	if (openFlags & os.O_RDWR == os.O_RDWR):
-		print "open rdwr"
+		print "fs.open rdwr"
 
 	if (openFlags & os.O_APPEND == os.O_APPEND):
-		print "open append"
+		print "fs.open append"
 
 	if (openFlags & os.O_CREAT == os.O_CREAT):
-		print "open creat"
+		print "fs.open creat"
 
 	if (openFlags & os.O_TRUNC == os.O_TRUNC):
-		print "open trunc"
+		print "fs.open trunc"
 
 	if (openFlags & os.O_EXCL == os.O_EXCL):
-		print "open excl"
+		print "fs.open excl"
 
 	return None
 
