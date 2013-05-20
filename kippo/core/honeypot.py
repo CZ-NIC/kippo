@@ -477,6 +477,12 @@ class HoneyPotAvatar(avatar.ConchUser):
         return None
 
     def execCommand(self, protocol, cmd):
+        cfg = config()
+        if cfg.has_option('honeypot', 'exec_enabled'):
+            if ( cfg.get('honeypot', 'exec_enabled') != "true" ):
+                print 'exec disabled not executing command: "%s"' % cmd
+                raise os.OSError
+
         print 'Executing command: "%s"' % cmd
         serverProtocol = LoggingServerProtocol(HoneyPotProtocol, self, self.env, cmd)
         serverProtocol.makeConnection(protocol)

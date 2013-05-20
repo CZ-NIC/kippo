@@ -82,6 +82,14 @@ rsa_private_key = data/ssh_host_rsa_key.pub
 dsa_public_key = data/ssh_host_dsa.key.pub
 dsa_private_key = data/ssh_host_dsa_key
 
+# Extra SSH features 
+# sftp_enabled enables the sftp subsystem
+# exec_enabled enables passing commands using ssh execCommand
+#
+# (default: false for both)
+sftp_enabled = false
+exec_enabled = false
+
 # Initial root password. NO LONGER USED!
 # Instead, see {data_path}/userdb.txt
 #password = 123456
