@@ -235,7 +235,7 @@ class HoneyPotFilesystem(object):
     def mkdir2(self, path):
         dir = self.getfile(path)
         if dir != False:
-            raise OSError(errno.EEXIST, "File exists")
+            raise OSError(errno.EEXIST, os.strerror(errno.EEXIST), path)
         return self.mkdir(path, 0, 0, 4096, 16877) 
 
     def rmdir(self, path):
@@ -244,19 +244,19 @@ class HoneyPotFilesystem(object):
     def utime(self, path, atime, mtime):
         p = self.getfile(path)
         if p == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         p[A_CTIME] = mtime
 
     def chmod(self, path, perm):
         p = self.getfile(path)
         if p == False: 
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
 	p[A_MODE] = stat.S_IFMT(p[A_MODE]) | perm
 
     def chown(self, path, uid, gid):
         p = self.getfile(path)
         if p == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         if (uid != -1):
             p[A_UID] = uid
         if (gid != -1):
@@ -265,14 +265,14 @@ class HoneyPotFilesystem(object):
     def remove(self, path):
         p = self.getfile(path)
         if p == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         self.get_path(os.path.dirname(path)).remove(p)
         return
 
     def readlink(self, path):
         p = self.getfile(path)
         if p == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         if not (p[A_MODE] & stat.S_IFLNK):
             raise OSError
         return p[A_TARGET]
@@ -284,10 +284,10 @@ class HoneyPotFilesystem(object):
         print "rename %s to %s" % (oldpath, newpath)
         old = self.getfile(oldpath)
 	if old == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         new = self.getfile(newpath)
         if new != False:
-            raise OSError(errno.EEXIST, "File exists")
+            raise OSError(errno.EEXIST, os.strerror(errno.EEXIST))
 
         self.get_path(os.path.dirname(oldpath)).remove(old)
         old[A_NAME] = os.path.basename(newpath)
@@ -324,7 +324,7 @@ class HoneyPotFilesystem(object):
             p = self.getfile(path)
 
         if p == False:
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
 
         return _statobj(
       	 p[A_MODE],
@@ -345,7 +345,7 @@ class HoneyPotFilesystem(object):
             p = self.getfile(path)
 
         if (p == False):
-            raise OSError(errno.ENOENT, "No such file or directory")
+            raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
 
         #if p[A_MODE] & stat.S_IFLNK == stat.S_IFLNK:
         if p[A_TYPE] == T_LINK:
