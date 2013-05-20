@@ -233,7 +233,8 @@ class HoneyPotFilesystem(object):
 
     # FIXME mkdir() name conflicts with existing mkdir
     def mkdir2(self, path):
-        if self.exists(path):
+        dir = self.getfile(path)
+        if dir != False:
             raise OSError(errno.EEXIST, "File exists")
         return self.mkdir(path, 0, 0, 4096, 16877) 
 

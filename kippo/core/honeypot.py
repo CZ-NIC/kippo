@@ -869,7 +869,7 @@ class KippoSFTPServer:
 
     def removeDirectory(self, path):
 	print "SFTP removeDirectory: %s" % path
-	return self.fs.rmdir(self.absPath(path))
+	return self.fs.rmdir(self._absPath(path))
 
     def openDirectory(self, path):
 	print "SFTP OpenDirectory: %s" % path
