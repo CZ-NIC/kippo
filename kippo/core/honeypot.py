@@ -1,20 +1,19 @@
 # Copyright (c) 2009 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
 
-import twisted
-from twisted.cred import portal, checkers, credentials, error
-from twisted.conch import avatar, recvline, interfaces as conchinterfaces
-from twisted.conch.ssh import factory, userauth, connection, keys, session, common, transport
-from twisted.conch.insults import insults
-from twisted.application import service, internet
-from twisted.internet import reactor, protocol, defer
-from twisted.python import failure, log, components
+import sys, os, random, pickle, time, stat, shlex, anydbm, struct, copy
 from zope.interface import implements
-from copy import deepcopy, copy
-import sys, os, random, pickle, time, stat, shlex, anydbm, struct
+
+import twisted
+from twisted.cred import checkers, credentials, error
+from twisted.conch import avatar, recvline, interfaces as conchinterfaces
+from twisted.conch.ssh import factory, userauth, session, transport
+from twisted.conch.insults import insults
+from twisted.internet import defer
+from twisted.python import log, components
+
 from twisted.conch.ssh import filetransfer
 from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_CREAT, FXF_TRUNC, FXF_EXCL
-from twisted.conch.ls import lsLine
 
 from kippo.core import ttylog, fs, utils
 from kippo.core.userdb import UserDB
@@ -99,7 +98,7 @@ class HoneyPotShell(object):
             return
 
         # probably no reason to be this comprehensive for just PATH...
-        envvars = copy(self.envvars)
+        envvars = copy.copy(self.envvars)
         cmd = None
         while len(cmdAndArgs):
             piece = cmdAndArgs.pop(0)
@@ -243,13 +242,13 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         self.env = env
         self.execcmd = execcmd
         self.hostname = self.env.cfg.get('honeypot', 'hostname')
-        self.fs = fs.HoneyPotFilesystem(deepcopy(self.env.fs))
+        self.fs = fs.HoneyPotFilesystem(copy.deepcopy(self.env.fs))
         if self.fs.exists(user.home):
             self.cwd = user.home
         else:
             self.cwd = '/'
         # commands is also a copy so we can add stuff on the fly
-        self.commands = copy(self.env.commands)
+        self.commands = copy.copy(self.env.commands)
         self.password_input = False
         self.cmdstack = []
 
@@ -519,7 +518,7 @@ class HoneyPotEnvironment(object):
             self.cfg.get('honeypot', 'filesystem_file'), 'rb'))
 
 class HoneyPotRealm:
-    implements(portal.IRealm)
+    implements(twisted.cred.portal.IRealm)
 
     def __init__(self):
         # I don't know if i'm supposed to keep static stuff here
@@ -637,7 +636,7 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
 class HoneyPotSSHFactory(factory.SSHFactory):
     services = {
         'ssh-userauth': HoneyPotSSHUserAuthServer,
-        'ssh-connection': connection.SSHConnection,
+        'ssh-connection': twisted.conch.ssh.connection.SSHConnection,
         }
 
     # Special delivery to the loggers to avoid scope problems
@@ -751,8 +750,8 @@ def getRSAKeys():
         from twisted.python import randbytes
         KEY_LENGTH = 2048
         rsaKey = RSA.generate(KEY_LENGTH, randbytes.secureRandom)
-        publicKeyString = keys.Key(rsaKey).public().toString('openssh')
-        privateKeyString = keys.Key(rsaKey).toString('openssh')
+        publicKeyString = twisted.conch.ssh.keys.Key(rsaKey).public().toString('openssh')
+        privateKeyString = twisted.conch.ssh.keys.Key(rsaKey).toString('openssh')
         file(public_key, 'w+b').write(publicKeyString)
         file(private_key, 'w+b').write(privateKeyString)
         print "done."
@@ -771,8 +770,8 @@ def getDSAKeys():
         from twisted.python import randbytes
         KEY_LENGTH = 1024
         dsaKey = DSA.generate(KEY_LENGTH, randbytes.secureRandom)
-        publicKeyString = keys.Key(dsaKey).public().toString('openssh')
-        privateKeyString = keys.Key(dsaKey).toString('openssh')
+        publicKeyString = twisted.conch.ssh.keys.Key(dsaKey).public().toString('openssh')
+        privateKeyString = twisted.conch.ssh.keys.Key(dsaKey).toString('openssh')
         file(public_key, 'w+b').write(publicKeyString)
         file(private_key, 'w+b').write(privateKeyString)
     else:
@@ -854,7 +853,7 @@ class KippoSFTPDirectory:
             raise StopIteration
         else:
             s = self.server.fs.lstat(os.path.join(self.dir, f))
-            longname = lsLine(f, s)
+            longname = twisted.conch.ls.lsLine(f, s)
             attrs = self.server._getAttrs(s)
             return (f, longname, attrs)
 
@@ -867,7 +866,7 @@ class KippoSFTPServer:
     def __init__(self, avatar):
 	self.avatar = avatar
 	# FIXME we should not copy fs here, but do this at avatar instantiation
-        self.fs = fs.HoneyPotFilesystem(deepcopy(self.avatar.env.fs))
+        self.fs = fs.HoneyPotFilesystem(copy.deepcopy(self.avatar.env.fs))
 
     def _absPath(self, path):
         home = self.avatar.home
