@@ -18,7 +18,7 @@ from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_
 from kippo.core import ttylog, fs, utils
 from kippo.core.userdb import UserDB
 from kippo.core.config import config
-import commands
+import kippo.commands
 
 import ConfigParser
 
