@@ -148,6 +148,13 @@ interact_port = 5123
 #password = secret
 #port = 3306
 
+[database_hpfeeds]
+server = hpfriends.honeycloud.net
+port = 20000
+identifier = identifier
+secret = secret
+debug=true
+
 # XMPP Logging
 #
 # Log to an xmpp server.
