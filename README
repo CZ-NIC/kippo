@@ -1,0 +1,30 @@
+## INSTALL
+
+you need to have twisted installed:
+zypper in python-twisted
+
+cp kippo.cfg.dist kippo.cfg
+
+logging to hpfeeds:
+cd kippo/dblog
+wget https://raw.github.com/rep/hpfeeds/master/appsupport/kippo/hpfeeds.py
+
+edit database_hpfeeds section in cfg
+
+logging to mysql:
+(from http://bruteforce.gr/logging-kippo-events-using-mysql-db.html)
+mysql -u root -p
+> CREATE DATABASE kippo;
+> GRANT ALL ON kippo.* TO 'kippo'@'localhost' IDENTIFIED BY 'password';
+> exit
+
+mysql -u kippo -p
+> USE kippo;
+> source ./doc/sql/mysql.sql;
+> exit
+
+uncomment database_mysql secion in cfg
+
+## RUN
+
+./start.sh
