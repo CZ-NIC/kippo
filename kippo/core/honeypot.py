@@ -791,8 +791,8 @@ class KippoSFTPFile:
 
     def __init__(self, server, filename, flags, attrs):
         self.server = server
-	self.filename = filename
-	self.transfer_completed = 0
+        self.filename = filename
+        self.transfer_completed = 0
         self.bytes_written = 0
         openFlags = 0
         if flags & FXF_READ == FXF_READ and flags & FXF_WRITE == 0:
@@ -832,8 +832,8 @@ class KippoSFTPFile:
         return self.contents[offset:offset+length]
 
     def writeChunk(self, offset, data):
-	self.server.fs.lseek(self.fd, offset, os.SEEK_SET)
-	self.server.fs.write(self.fd, data)
+        self.server.fs.lseek(self.fd, offset, os.SEEK_SET)
+        self.server.fs.write(self.fd, data)
         self.bytes_written += len(data)
 
     def getAttrs(self):
@@ -871,8 +871,8 @@ class KippoSFTPServer:
     implements(conchinterfaces.ISFTPServer)
  
     def __init__(self, avatar):
-	self.avatar = avatar
-	# FIXME we should not copy fs here, but do this at avatar instantiation
+        self.avatar = avatar
+        # FIXME we should not copy fs here, but do this at avatar instantiation
         self.fs = fs.HoneyPotFilesystem(copy.deepcopy(self.avatar.env.fs))
 
     def _absPath(self, path):
@@ -901,34 +901,34 @@ class KippoSFTPServer:
         return {}
 
     def openFile(self, filename, flags, attrs):
-	print "SFTP openFile: %s" % filename
+        print "SFTP openFile: %s" % filename
         return KippoSFTPFile(self, self._absPath(filename), flags, attrs)
 
     def removeFile(self, filename):
-	print "SFTP removeFile: %s" % filename
-	return self.fs.remove(self._absPath(filename))
+        print "SFTP removeFile: %s" % filename
+        return self.fs.remove(self._absPath(filename))
 
     def renameFile(self, oldpath, newpath):
-	print "SFTP renameFile: %s %s" % (oldpath, newpath) 
+        print "SFTP renameFile: %s %s" % (oldpath, newpath) 
         return self.fs.rename(self._absPath(oldpath), self._absPath(newpath))
 
     def makeDirectory(self, path, attrs):
-	print "SFTP makeDirectory: %s" % path
+        print "SFTP makeDirectory: %s" % path
         path = self._absPath(path)
         self.fs.mkdir2(path)
         self._setAttrs(path, attrs)
         return 
 
     def removeDirectory(self, path):
-	print "SFTP removeDirectory: %s" % path
-	return self.fs.rmdir(self._absPath(path))
+        print "SFTP removeDirectory: %s" % path
+        return self.fs.rmdir(self._absPath(path))
 
     def openDirectory(self, path):
-	print "SFTP OpenDirectory: %s" % path
+        print "SFTP OpenDirectory: %s" % path
         return KippoSFTPDirectory(self, self._absPath(path))
 
     def getAttrs(self, path, followLinks):
-	print "SFTP getAttrs: %s" % path
+        print "SFTP getAttrs: %s" % path
         path = self._absPath(path)
         if followLinks:
             s = self.fs.stat(path)
@@ -937,23 +937,23 @@ class KippoSFTPServer:
         return self._getAttrs(s)
 
     def setAttrs(self, path, attrs):
-	print "SFTP setAttrs: %s" % path
+        print "SFTP setAttrs: %s" % path
         path = self._absPath(path)
-	return self._setAttrs(path, attrs)
+        return self._setAttrs(path, attrs)
 
     def readLink(self, path):
-	print "SFTP readLink: %s" % path
+        print "SFTP readLink: %s" % path
         path = self._absPath(path)
-	return self.fs.readlink(path)
+        return self.fs.readlink(path)
 
     def makeLink(self, linkPath, targetPath):
-	print "SFTP makeLink: %s" % path
+        print "SFTP makeLink: %s" % path
         linkPath = self._absPath(linkPath)
         targetPath = self._absPath(targetPath)
-	return self.fs.symlink(targetPath, linkPath)
+        return self.fs.symlink(targetPath, linkPath)
 
     def realPath(self, path):
-	print "SFTP realPath: %s" % path
+        print "SFTP realPath: %s" % path
         return self.fs.realpath(self._absPath(path))
 
     def extendedRequest(self, extName, extData):

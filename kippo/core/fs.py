@@ -190,7 +190,7 @@ class HoneyPotFilesystem(object):
     # additions for SFTP support, try to keep functions here similar to os.*
 
     def open(self, filename, openFlags, mode):
-	print "fs.open %s" % filename
+        print "fs.open %s" % filename
 
         if (openFlags & os.O_APPEND == os.O_APPEND):
             print "fs.open append"
@@ -208,15 +208,15 @@ class HoneyPotFilesystem(object):
             print "fs.open rdwr"
             raise notImplementedError
 
-	elif openFlags & os.O_WRONLY == os.O_WRONLY:
+        elif openFlags & os.O_WRONLY == os.O_WRONLY:
             # ensure we do not save with executable bit set
             realmode = mode & ~(stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
             print "fs.open wronly %s " % os.O_WRONLY
             safeoutfile = '%s/%s_%s' % \
-	       	     (config().get('honeypot', 'download_path'),
-	            time.strftime('%Y%m%d%H%M%S'),
-	            re.sub('[^A-Za-z0-9]', '_', filename))
+                       (config().get('honeypot', 'download_path'),
+                    time.strftime('%Y%m%d%H%M%S'),
+                    re.sub('[^A-Za-z0-9]', '_', filename))
             print "fs.open file for writing, saving to %s" % safeoutfile
 
             self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode)
@@ -225,11 +225,11 @@ class HoneyPotFilesystem(object):
 
             return fd
 
-	elif openFlags & os.O_RDONLY == os.O_RDONLY:
+        elif openFlags & os.O_RDONLY == os.O_RDONLY:
             print "fs.open rdonly"
             return None
 
-	return None
+        return None
 
     # FIXME mkdir() name conflicts with existing mkdir
     def mkdir2(self, path):
@@ -239,7 +239,7 @@ class HoneyPotFilesystem(object):
         return self.mkdir(path, 0, 0, 4096, 16877) 
 
     def rmdir(self, path):
-	raise notImplementedError
+        raise notImplementedError
 
     def utime(self, path, atime, mtime):
         p = self.getfile(path)
@@ -251,7 +251,7 @@ class HoneyPotFilesystem(object):
         p = self.getfile(path)
         if p == False: 
             raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
-	p[A_MODE] = stat.S_IFMT(p[A_MODE]) | perm
+        p[A_MODE] = stat.S_IFMT(p[A_MODE]) | perm
 
     def chown(self, path, uid, gid):
         p = self.getfile(path)
@@ -278,12 +278,12 @@ class HoneyPotFilesystem(object):
         return p[A_TARGET]
 
     def symlink(self, targetPath, linkPath):
-	raise notImplementedError
+        raise notImplementedError
 
     def rename(self, oldpath, newpath):
         print "rename %s to %s" % (oldpath, newpath)
         old = self.getfile(oldpath)
-	if old == False:
+        if old == False:
             raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
         new = self.getfile(newpath)
         if new != False:
@@ -292,19 +292,19 @@ class HoneyPotFilesystem(object):
         self.get_path(os.path.dirname(oldpath)).remove(old)
         old[A_NAME] = os.path.basename(newpath)
         self.get_path(os.path.dirname(newpath)).append(old)
-	return
+        return
 
     def read(self, fd, size):
-	# this should not be called, we intercept at readChunk
-	raise notImplementedError
+        # this should not be called, we intercept at readChunk
+        raise notImplementedError
 
     def write(self, fd, string):
-	return os.write(fd, string)
+        return os.write(fd, string)
 
     def close(self, fd):
-	if (fd == None): 
+        if (fd == None): 
             return True
-	return os.close(fd)
+        return os.close(fd)
 
     def lseek(self, fd, offset, whence):
         if (fd == None):
@@ -313,7 +313,7 @@ class HoneyPotFilesystem(object):
 
     def listdir(self, path):
         names = [x[A_NAME] for x in self.get_path(path)]
-	return names
+        return names
 
     def lstat(self, path):
 
@@ -327,16 +327,16 @@ class HoneyPotFilesystem(object):
             raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
 
         return _statobj(
-      	 p[A_MODE],
-	 0,
-	 0,
-	 1,
-	 p[A_UID],
-	 p[A_GID],
-	 p[A_SIZE],
-	 p[A_CTIME],
-	 p[A_CTIME],
-	 p[A_CTIME])
+               p[A_MODE],
+         0,
+         0,
+         1,
+         p[A_UID],
+         p[A_GID],
+         p[A_SIZE],
+         p[A_CTIME],
+         p[A_CTIME],
+         p[A_CTIME])
 
     def stat(self, path):
         if (path == "/"):
