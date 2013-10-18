@@ -353,9 +353,9 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
 
     def keystrokeReceived(self, keyID, modifier):
         transport = self.terminal.transport.session.conn.transport
-        if type(keyID) == type(''):
-            ttylog.ttylog_write(transport.ttylog_file, len(keyID),
-                ttylog.TYPE_INPUT, time.time(), keyID)
+#        if type(keyID) == type(''):
+#            ttylog.ttylog_write(transport.ttylog_file, len(keyID),
+#                ttylog.TYPE_INPUT, time.time(), keyID)
         recvline.HistoricRecvLine.keystrokeReceived(self, keyID, modifier)
 
     # Easier way to implement password input?
@@ -439,6 +439,13 @@ class LoggingServerProtocol(insults.ServerProtocol):
             ttylog.ttylog_write(transport.ttylog_file, len(bytes),
                 ttylog.TYPE_OUTPUT, time.time(), bytes)
         insults.ServerProtocol.write(self, bytes)
+
+    def dataReceived(self, data, noLog = False):
+        transport = self.transport.session.conn.transport
+        if transport.ttylog_open and not noLog:
+            ttylog.ttylog_write(transport.ttylog_file, len(data),
+                ttylog.TYPE_INPUT, time.time(), data)
+        insults.ServerProtocol.dataReceived(self, data)
 
     # this doesn't seem to be called upon disconnect, so please use 
     # HoneyPotTransport.connectionLost instead
