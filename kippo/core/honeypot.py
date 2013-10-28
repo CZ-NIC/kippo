@@ -277,21 +277,21 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         else:
             self.clientIP = self.realClientIP
 
+        if self.execcmd != None:
+            print 'Running exec cmd "%s"' % self.execcmd
+            self.cmdstack[0].lineReceived(self.execcmd)
+            self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
+            self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
+            return
+            # self.terminal.transport.session.conn.sendEOF(self)
+
+        # key handlers after execcmd so they don't distrub binary stdin
         self.keyHandlers.update({
             '\x04':     self.handle_CTRL_D,
             '\x15':     self.handle_CTRL_U,
             '\x03':     self.handle_CTRL_C,
             '\x09':     self.handle_TAB,
             })
-
-        if self.execcmd != None:
-            print 'Running exec cmd "%s"' % self.execcmd
-            self.cmdstack[0].lineReceived(self.execcmd)
-            self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
-            self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
-            self.execcmd = None
-            return
-            # self.terminal.transport.session.conn.sendEOF(self)
             # self.terminal.transport.session.conn.transport.loseConnection()
 
     def displayMOTD(self):
@@ -348,6 +348,9 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         return None
 
     def lineReceived(self, line):
+        # don't execute additional commands after execcmd 
+        if self.execcmd != None:
+            return
         if len(self.cmdstack):
             self.cmdstack[-1].lineReceived(line)
 
@@ -466,6 +469,7 @@ class HoneyPotAvatar(avatar.ConchUser):
         self.username = username
         self.env = env
         self.channelLookup.update({'session': HoneyPotSSHSession})
+        self.windowSize = [80,24]
 
         # disabled by default
         if self.env.cfg.has_option('honeypot', 'sftp_enabled'):
