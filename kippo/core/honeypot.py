@@ -5,6 +5,7 @@ import sys, os, random, pickle, time, stat, shlex, anydbm, struct, copy
 from zope.interface import implements
 
 import twisted
+import twisted.conch.ls
 from twisted.cred import checkers, credentials, error
 from twisted.conch import avatar, recvline, interfaces as conchinterfaces
 from twisted.conch.ssh import factory, userauth, session, transport
