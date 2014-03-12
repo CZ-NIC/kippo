@@ -892,7 +892,7 @@ class KippoSFTPServer:
         if attrs.has_key("permissions"):
             self.fs.chmod(path, attrs["permissions"])
         if attrs.has_key("atime") and attrs.has_key("mtime"):
-            self.fs.utime(path, (attrs["atime"], attrs["mtime"]))
+            self.fs.utime(path, attrs["atime"], attrs["mtime"])
 
     def _getAttrs(self, s):
         return {
