@@ -705,12 +705,15 @@ class HoneyPotSSHFactory(factory.SSHFactory):
             self.dbloggers.append(dblogger)
 
     def buildProtocol(self, addr):
-        # FIXME: try to mimic something real 100%
+        cfg = config()
+
         t = HoneyPotTransport()
+        if cfg.has_option('honeypot', 'ssh_version_string'):
+            t.ourVersionString = cfg.get('honeypot','ssh_version_string')
+        else:
+            t.ourVersionString = "SSH-2.0-OpenSSH_5.1p1 Debian-5"
 
-        t.ourVersionString = 'SSH-2.0-OpenSSH_6.0p1 Debian-4'
         t.supportedPublicKeys = self.privateKeys.keys()
-
         if not self.primes:
             ske = t.supportedKeyExchanges[:]
             ske.remove('diffie-hellman-group-exchange-sha1')
