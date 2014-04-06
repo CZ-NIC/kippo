@@ -545,6 +545,8 @@ class HoneyPotRealm:
 class HoneyPotTransport(transport.SSHServerTransport):
 
     hadVersion = False
+    transport.SSHServerTransport.supportedPublicKeys = ['ssh-rsa', 'ssh-dss']
+    transport.SSHServerTransport.supportedCompressions = ['none', 'zlib@openssh.com']
 
     def connectionMade(self):
         print 'New connection: %s:%s (%s:%s) [session: %d]' % \
@@ -705,7 +707,7 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         # FIXME: try to mimic something real 100%
         t = HoneyPotTransport()
 
-        t.ourVersionString = 'SSH-2.0-OpenSSH_5.1p1 Debian-5'
+        t.ourVersionString = 'SSH-2.0-OpenSSH_6.0p1 Debian-4'
         t.supportedPublicKeys = self.privateKeys.keys()
 
         if not self.primes:
