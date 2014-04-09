@@ -76,10 +76,10 @@ txtcmds_path = txtcmds
 
 # Public and private SSH key files. If these don't exist, they are created
 # automatically.
-rsa_public_key = data/ssh_host_rsa_key
-rsa_private_key = data/ssh_host_rsa_key.pub
+rsa_public_key = data/ssh_host_rsa_key.pub
+rsa_private_key = data/ssh_host_rsa_key
 
-dsa_public_key = data/ssh_host_dsa.key.pub
+dsa_public_key = data/ssh_host_dsa_key.pub
 dsa_private_key = data/ssh_host_dsa_key
 
 # Extra SSH features 
