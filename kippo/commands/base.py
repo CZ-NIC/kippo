@@ -457,6 +457,7 @@ class command_nop(HoneyPotCommand):
 commands['set'] = command_nop
 commands['unset'] = command_nop
 commands['export'] = command_nop
+commands['alias'] = command_nop
 commands['/bin/kill'] = command_nop
 commands['/bin/su'] = command_nop
 commands['/bin/umask'] = command_nop
