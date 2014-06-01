@@ -363,10 +363,23 @@ class command_php(HoneyPotCommand):
         print 'INPUT (php):', line
 commands['/usr/bin/php'] = command_php
 
+class command_chmod(HoneyPotCommand):
+    def call(self):
+        if len(self.args) and len(self.args) >= 2:
+            for arg in self.args[1:]:
+                path = self.fs.resolve_path(arg, self.honeypot.cwd)
+                if self.fs.exists(path):
+                    continue
+                else:
+                    self.writeln('chmod: cannot access %s: No such file or directory' % (arg,))
+        else:
+            self.writeln('chmod: missing operand')
+            self.writeln('Try chmod --help for more information.')
+commands['/bin/chmod'] = command_chmod
+
 class command_nop(HoneyPotCommand):
     def call(self):
         pass
-commands['/bin/chmod'] = command_nop
 commands['set'] = command_nop
 commands['unset'] = command_nop
 commands['export'] = command_nop
