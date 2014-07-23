@@ -116,8 +116,14 @@ class HoneyPotShell(object):
             return
 
         rargs = []
+        matches = ""
         for arg in args:
-            matches = self.honeypot.fs.resolve_path_wc(arg, self.honeypot.cwd)
+            try:
+                matches = self.honeypot.fs.resolve_path_wc(arg, self.honeypot.cwd)
+            except Exception as e:
+                print "arg= " + arg
+                print "self.honeypot.cwd= " + self.honeypot.cwd
+                print str(e)
             if matches:
                 rargs.extend(matches)
             else:
