@@ -290,7 +290,6 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
             self.clientIP = self.realClientIP
 
         if self.execcmd != None:
-            print 'Running exec cmd "%s"' % self.execcmd
             self.cmdstack[0].lineReceived(self.execcmd)
             self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
             self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
@@ -514,7 +513,7 @@ class HoneyPotAvatar(avatar.ConchUser):
                 print 'exec disabled not executing command: "%s"' % cmd
                 raise os.OSError
 
-        print 'Executing command: "%s"' % cmd
+        print 'Executing command'
         serverProtocol = LoggingServerProtocol(HoneyPotProtocol, self, self.env, cmd)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
