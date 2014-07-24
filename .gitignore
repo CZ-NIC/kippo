@@ -3,7 +3,3 @@ private.key
 public.key
 kippo.cfg
 kippo.pid
-data/kippo_host_dsa_key
-data/kippo_host_rsa_key
-data/kippo_host_dsa_key.pub
-data/kippo_host_rsa_key.pub
