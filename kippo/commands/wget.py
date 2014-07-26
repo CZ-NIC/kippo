@@ -6,10 +6,17 @@ from kippo.core.fs import *
 from kippo.core import virustotal
 from twisted.web import client
 from twisted.internet import reactor
-import stat, time, urlparse, random, re, exceptions
+import stat
+import time
+import urlparse
+import random
+import re
+import exceptions
 import os
 import hashlib
 import shutil
+import os.path
+import getopt
 
 commands = {}
 
@@ -41,14 +48,16 @@ def splitthousands( s, sep=','):
 
 class command_wget(HoneyPotCommand):
     def start(self):
-        url = None
-        for arg in self.args:
-            if arg.startswith('-'):
-                continue
-            url = arg.strip()
-            break
+        try:
+            optlist, args = getopt.getopt(self.args, 'O:')
+        except getopt.GetoptError, err:
+            self.writeln('Unrecognized option')
+            self.exit()
+            return
 
-        if not url:
+        if len(args):
+            url = args[0].strip()
+        else:
             self.writeln('wget: missing URL')
             self.writeln('Usage: wget [OPTION]... [URL]...')
             self.nextLine()
@@ -56,14 +65,30 @@ class command_wget(HoneyPotCommand):
             self.exit()
             return
 
+        outfile = None
+        for opt in optlist:
+            if opt[0] == '-O':
+                outfile = opt[1]
+
         if '://' not in url:
             url = 'http://%s' % url
 
         urldata = urlparse.urlparse(url)
 
-        outfile = urldata.path.split('/')[-1]
-        if not len(outfile.strip()) or not urldata.path.count('/'):
-            outfile = 'index.html'
+        if outfile is None:
+            outfile = urldata.path.split('/')[-1]
+            if not len(outfile.strip()) or not urldata.path.count('/'):
+                outfile = 'index.html'
+
+        outfile = self.fs.resolve_path(outfile, self.honeypot.cwd)
+        path = os.path.dirname(outfile)
+        if not path or \
+                not self.fs.exists(path) or \
+                not self.fs.is_dir(path):
+            self.writeln('wget: %s: Cannot open: No such file or directory' % \
+                outfile)
+            self.exit()
+            return
 
         self.url = url
         self.limit_size = 0
@@ -270,14 +295,13 @@ class HTTPProgressDownloader(client.HTTPDownloader):
             (time.strftime('%Y-%m-%d %H:%M:%S'),
             self.speed / 1000,
             self.fakeoutfile, self.currentlength, self.totallength))
-        outfile = '%s/%s' % (self.wget.honeypot.cwd, self.fakeoutfile)
-        self.wget.fs.mkfile(outfile, 0, 0, self.totallength, 33188)
+        self.wget.fs.mkfile(self.fakeoutfile, 0, 0, self.totallength, 33188)
         self.wget.fs.update_realfile(
-            self.wget.fs.getfile(outfile),
+            self.wget.fs.getfile(self.fakeoutfile),
             self.wget.safeoutfile)
 
         self.wget.fileName = self.fileName
-        self.wget.outfile = outfile
+        self.wget.outfile = self.fakeoutfile
         return client.HTTPDownloader.pageEnd(self)
 
 # vim: set sw=4 et:
