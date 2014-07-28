@@ -442,6 +442,11 @@ class command_perl(HoneyPotCommand):
         print 'INPUT (perl):', line
 commands['/usr/bin/perl'] = command_perl
 
+class command_init_iptables(HoneyPotCommand):
+    def call(self):
+        self.writeln('bash: /etc/init.d/iptables: No such file or directory')
+commands['/etc/init.d/iptables'] = command_init_iptables
+
 class command_nop(HoneyPotCommand):
     def call(self):
         pass
