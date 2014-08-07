@@ -6,7 +6,9 @@ from kippo.core.fs import *
 from twisted.web import client
 from twisted.internet import reactor
 import stat, time, urlparse, random, re, exceptions
-import os.path
+import os
+import hashlib
+import shutil
 
 commands = {}
 
@@ -68,8 +70,10 @@ class command_wget(HoneyPotCommand):
         if cfg.has_option('honeypot', 'download_limit_size'):
             self.limit_size = int(cfg.get('honeypot', 'download_limit_size'))
 
+        self.download_path = cfg.get('honeypot', 'download_path')
+
         self.safeoutfile = '%s/%s_%s' % \
-            (cfg.get('honeypot', 'download_path'),
+            (self.download_path,
             time.strftime('%Y%m%d%H%M%S'),
             re.sub('[^A-Za-z0-9]', '_', url))
         self.deferred = self.download(url, outfile, self.safeoutfile)
@@ -109,16 +113,43 @@ class command_wget(HoneyPotCommand):
         return factory.deferred
 
     def ctrl_c(self):
+        print '^C'
         self.writeln('^C')
         self.connection.transport.loseConnection()
 
     def success(self, data):
+        if not os.path.isfile(self.safeoutfile):
+            print "there's no " + self.safeoutfile
+            self.exit()
+
+        shasum = hashlib.sha256(open(self.safeoutfile, 'rb').read()).hexdigest()
+        hash_path = '%s/%s' % (self.download_path, shasum)
+
+        msg = 'SHA sum %s of URL %s in file %s' % \
+            (shasum, self.url, self.fileName)
+        print msg
+        self.honeypot.logDispatch(msg)
+
+        if not os.path.exists(hash_path):
+            print "moving " + self.safeoutfile + " -> " + hash_path
+            shutil.move(self.safeoutfile, hash_path)
+        else:
+            print "deleting " + self.safeoutfile + " SHA sum: " + shasum
+            os.remove(self.safeoutfile)
+        self.safeoutfile = hash_path
+
+        print "Updating realfile to " + hash_path
+        f = self.fs.getfile(self.outfile)
+        f[9] = hash_path
         self.exit()
 
     def error(self, error, url):
         if hasattr(error, 'getErrorMessage'): # exceptions
             error = error.getErrorMessage()
-        self.writeln(error)
+            print "error: " + error
+        else:
+            print "error"
+        self.writeln("ERROR")
         # Real wget also adds this:
         #self.writeln('%s ERROR 404: Not Found.' % \
         #    time.strftime('%Y-%m-%d %T'))
@@ -173,8 +204,8 @@ class HTTPProgressDownloader(client.HTTPDownloader):
                 self.nomore = True
             else:
                 msg = 'Saving URL (%s) to %s' % (self.wget.url, self.fileName)
-                self.wget.honeypot.logDispatch(msg)
                 print msg
+                self.wget.honeypot.logDispatch(msg)
             self.wget.writeln('Saving to: `%s' % self.fakeoutfile)
             self.wget.honeypot.terminal.nextLine()
 
@@ -215,6 +246,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
         return client.HTTPDownloader.pagePart(self, data)
 
     def pageEnd(self):
+
         if self.totallength != 0 and self.currentlength != self.totallength:
             return client.HTTPDownloader.pageEnd(self)
         self.wget.write('\r100%%[%s] %s %dK/s' % \
@@ -233,6 +265,9 @@ class HTTPProgressDownloader(client.HTTPDownloader):
         self.wget.fs.update_realfile(
             self.wget.fs.getfile(outfile),
             self.wget.safeoutfile)
+
+        self.wget.fileName = self.fileName
+        self.wget.outfile = outfile
         return client.HTTPDownloader.pageEnd(self)
 
 # vim: set sw=4 et:
