@@ -250,7 +250,8 @@ class HoneyPotAvatar(avatar.ConchUser):
             self.home = '/home/' + username
 
     def openShell(self, protocol):
-        serverProtocol = honeypot.LoggingServerProtocol(honeypot.HoneyPotProtocol, self, self.env)
+        serverProtocol = honeypot.LoggingServerProtocol(
+            honeypot.HoneyPotInteractiveProtocol, self, self.env)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
@@ -268,7 +269,8 @@ class HoneyPotAvatar(avatar.ConchUser):
                 raise os.OSError
 
         print 'Executing command'
-        serverProtocol = honeypot.LoggingServerProtocol(honeypot.HoneyPotProtocol, self, self.env, cmd)
+        serverProtocol = honeypot.LoggingServerProtocol(
+            honeypot.HoneyPotExecProtocol, self, self.env, cmd)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 

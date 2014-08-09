@@ -51,8 +51,9 @@ class HoneyPotCommand(object):
         pass
 
 class HoneyPotShell(object):
-    def __init__(self, honeypot):
+    def __init__(self, honeypot, interactive = True):
         self.honeypot = honeypot
+        self.interactive = interactive
         self.showPrompt()
         self.cmdpending = []
         self.envvars = {
@@ -134,7 +135,8 @@ class HoneyPotShell(object):
                 runOrPrompt()
 
     def resume(self):
-        self.honeypot.setInsertMode()
+        if self.interactive:
+            self.honeypot.setInsertMode()
         self.runCommand()
 
     def showPrompt(self):
@@ -247,7 +249,7 @@ class HoneyPotShell(object):
         self.honeypot.lineBufferIndex = len(self.honeypot.lineBuffer)
         self.honeypot.terminal.write(newbuf)
 
-class HoneyPotProtocol(recvline.HistoricRecvLine):
+class HoneyPotBaseProtocol(insults.TerminalProtocol):
     def __init__(self, user, env, execcmd = None):
         self.user = user
         self.env = env
@@ -268,14 +270,12 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         transport.factory.logDispatch(transport.transport.sessionno, msg)
 
     def connectionMade(self):
-        recvline.HistoricRecvLine.connectionMade(self)
         self.displayMOTD()
-        self.cmdstack = [HoneyPotShell(self)]
 
         transport = self.terminal.transport.session.conn.transport
-        transport.factory.sessions[transport.transport.sessionno] = self
 
-        self.realClientIP = transport.transport.getPeer().host
+        #transport = self.transport.transport.session.conn.transport
+        self.realClientIP = transport.getPeer().address.host
         self.clientVersion = transport.otherVersionString
         self.logintime = transport.logintime
         self.ttylog_file = transport.ttylog_file
@@ -287,22 +287,6 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         else:
             self.clientIP = self.realClientIP
 
-        if self.execcmd != None:
-            self.cmdstack[0].lineReceived(self.execcmd)
-            self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
-            self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
-            return
-            # self.terminal.transport.session.conn.sendEOF(self)
-
-        # key handlers after execcmd so they don't distrub binary stdin
-        self.keyHandlers.update({
-            '\x04':     self.handle_CTRL_D,
-            '\x15':     self.handle_CTRL_U,
-            '\x03':     self.handle_CTRL_C,
-            '\x09':     self.handle_TAB,
-            })
-            # self.terminal.transport.session.conn.transport.loseConnection()
-
     def displayMOTD(self):
         try:
             self.writeln(self.fs.file_contents('/etc/motd'))
@@ -312,16 +296,11 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
     # this doesn't seem to be called upon disconnect, so please use 
     # HoneyPotTransport.connectionLost instead
     def connectionLost(self, reason):
-        recvline.HistoricRecvLine.connectionLost(self, reason)
-
+        pass
         # not sure why i need to do this:
         # scratch that, these don't seem to be necessary anymore:
         #del self.fs
         #del self.commands
-
-    # Overriding to prevent terminal.reset()
-    def initializeScreen(self):
-        self.setInsertMode()
 
     def txtcmd(self, txt):
         class command_txtcmd(HoneyPotCommand):
@@ -363,6 +342,77 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         if len(self.cmdstack):
             self.cmdstack[-1].lineReceived(line)
 
+    def writeln(self, data):
+        self.terminal.write(data)
+        self.terminal.nextLine()
+
+    def call_command(self, cmd, *args):
+        obj = cmd(self, *args)
+        self.cmdstack.append(obj)
+        obj.start()
+
+    def addInteractor(self, interactor):
+        transport = self.terminal.transport.session.conn.transport
+        transport.interactors.append(interactor)
+
+    def delInteractor(self, interactor):
+        transport = self.terminal.transport.session.conn.transport
+        transport.interactors.remove(interactor)
+
+    def uptime(self, reset = None):
+        transport = self.terminal.transport.session.conn.transport
+        r = time.time() - transport.factory.starttime
+        if reset:
+            transport.factory.starttime = reset
+        return r
+
+class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
+
+    def __init__(self, user, env, execcmd = None):
+        recvline.HistoricRecvLine.__init__(self)
+        HoneyPotBaseProtocol.__init__(self, user, env, execcmd)
+
+    def connectionMade(self):
+        HoneyPotBaseProtocol.connectionMade(self)
+        recvline.HistoricRecvLine.connectionMade(self)
+
+        self.cmdstack = [HoneyPotShell(self)]
+
+        transport = self.terminal.transport.session.conn.transport
+        transport.factory.sessions[transport.transport.sessionno] = self
+
+        if self.execcmd != None:
+            print 'Running exec cmd "%s"' % self.execcmd
+            self.cmdstack[0].lineReceived(self.execcmd)
+            self.terminal.transport.session.conn.sendRequest(
+                self.terminal.transport.session,
+                'exit-status',
+                struct.pack('>L', 0))
+            self.terminal.transport.session.conn.sendClose(
+                self.terminal.transport.session)
+            return
+
+        self.keyHandlers.update({
+            '\x04':     self.handle_CTRL_D,
+            '\x15':     self.handle_CTRL_U,
+            '\x03':     self.handle_CTRL_C,
+            '\x09':     self.handle_TAB,
+            })
+
+    # this doesn't seem to be called upon disconnect, so please use
+    # HoneyPotTransport.connectionLost instead
+    def connectionLost(self, reason):
+        HoneyPotBaseProtocol.connectionLost(self, reason)
+        recvline.HistoricRecvLine.connectionLost(self, reason)
+
+    # Overriding to prevent terminal.reset()
+    def initializeScreen(self):
+        self.setInsertMode()
+
+    def call_command(self, cmd, *args):
+        self.setTypeoverMode()
+        HoneyPotBaseProtocol.call_command(self, cmd, *args)
+
     def keystrokeReceived(self, keyID, modifier):
         transport = self.terminal.transport.session.conn.transport
 #        if type(keyID) == type(''):
@@ -379,16 +429,6 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
         self.lineBufferIndex += 1
         if not self.password_input: 
             self.terminal.write(ch)
-
-    def writeln(self, data):
-        self.terminal.write(data)
-        self.terminal.nextLine()
-
-    def call_command(self, cmd, *args):
-        obj = cmd(self, *args)
-        self.cmdstack.append(obj)
-        self.setTypeoverMode()
-        obj.start()
 
     def handle_RETURN(self):
         if len(self.cmdstack) == 1:
@@ -413,20 +453,21 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
     def handle_TAB(self):
         self.cmdstack[-1].handle_TAB()
 
-    def addInteractor(self, interactor):
-        transport = self.terminal.transport.session.conn.transport
-        transport.interactors.append(interactor)
+class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
-    def delInteractor(self, interactor):
-        transport = self.terminal.transport.session.conn.transport
-        transport.interactors.remove(interactor)
+    def connectionMade(self):
+        HoneyPotBaseProtocol.connectionMade(self)
 
-    def uptime(self, reset = None):
-        transport = self.terminal.transport.session.conn.transport
-        r = time.time() - transport.factory.starttime
-        if reset:
-            transport.factory.starttime = reset
-        return r
+        self.cmdstack = [HoneyPotShell(self, interactive=False)]
+
+        print 'Running exec command "%s"' % self.execcmd
+        self.cmdstack[0].lineReceived(self.execcmd)
+        self.terminal.transport.session.conn.sendRequest(
+            self.terminal.transport.session,
+            'exit-status',
+            struct.pack('>L', 0))
+        self.terminal.transport.session.conn.sendClose(
+            self.terminal.transport.session)
 
 class LoggingServerProtocol(insults.ServerProtocol):
     def connectionMade(self):
