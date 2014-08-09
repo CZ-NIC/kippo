@@ -79,8 +79,12 @@ class HoneyPotShell(object):
                 self.showPrompt()
 
         if not len(self.cmdpending):
-            self.showPrompt()
+            if self.interactive:
+                self.showPrompt()
+            else:
+                self.honeypot.terminal.transport.loseConnection()
             return
+
         line = self.cmdpending.pop(0)
         try:
             cmdAndArgs = shlex.split(line)
@@ -140,7 +144,7 @@ class HoneyPotShell(object):
         self.runCommand()
 
     def showPrompt(self):
-        if (self.honeypot.execcmd != None):
+        if not self.interactive:
             return
 
         # Example: nas3:~#
@@ -250,10 +254,9 @@ class HoneyPotShell(object):
         self.honeypot.terminal.write(newbuf)
 
 class HoneyPotBaseProtocol(insults.TerminalProtocol):
-    def __init__(self, user, env, execcmd = None):
+    def __init__(self, user, env):
         self.user = user
         self.env = env
-        self.execcmd = execcmd
         self.hostname = self.env.cfg.get('honeypot', 'hostname')
         self.fs = fs.HoneyPotFilesystem(copy.deepcopy(self.env.fs))
         if self.fs.exists(user.home):
@@ -336,9 +339,6 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         return None
 
     def lineReceived(self, line):
-        # don't execute additional commands after execcmd 
-        if self.execcmd != None:
-            return
         if len(self.cmdstack):
             self.cmdstack[-1].lineReceived(line)
 
@@ -368,9 +368,9 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
 
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
-    def __init__(self, user, env, execcmd = None):
+    def __init__(self, user, env):
         recvline.HistoricRecvLine.__init__(self)
-        HoneyPotBaseProtocol.__init__(self, user, env, execcmd)
+        HoneyPotBaseProtocol.__init__(self, user, env)
 
     def connectionMade(self):
         HoneyPotBaseProtocol.connectionMade(self)
@@ -380,17 +380,6 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
 
         transport = self.terminal.transport.session.conn.transport
         transport.factory.sessions[transport.transport.sessionno] = self
-
-        if self.execcmd != None:
-            print 'Running exec cmd "%s"' % self.execcmd
-            self.cmdstack[0].lineReceived(self.execcmd)
-            self.terminal.transport.session.conn.sendRequest(
-                self.terminal.transport.session,
-                'exit-status',
-                struct.pack('>L', 0))
-            self.terminal.transport.session.conn.sendClose(
-                self.terminal.transport.session)
-            return
 
         self.keyHandlers.update({
             '\x04':     self.handle_CTRL_D,
@@ -455,6 +444,10 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
 
 class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
+    def __init__(self, user, env, execcmd):
+        self.execcmd = execcmd
+        HoneyPotBaseProtocol.__init__(self, user, env)
+
     def connectionMade(self):
         HoneyPotBaseProtocol.connectionMade(self)
 
@@ -462,12 +455,6 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
         print 'Running exec command "%s"' % self.execcmd
         self.cmdstack[0].lineReceived(self.execcmd)
-        self.terminal.transport.session.conn.sendRequest(
-            self.terminal.transport.session,
-            'exit-status',
-            struct.pack('>L', 0))
-        self.terminal.transport.session.conn.sendClose(
-            self.terminal.transport.session)
 
 class LoggingServerProtocol(insults.ServerProtocol):
     def connectionMade(self):
