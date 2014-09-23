@@ -223,13 +223,13 @@ class HoneyPotFilesystem(object):
             fd = os.open(safeoutfile, openFlags, realmode)
             self.update_realfile(self.getfile(filename), safeoutfile)
 
-            return fd
+            return (fd, safeoutfile)
 
         elif openFlags & os.O_RDONLY == os.O_RDONLY:
             print "fs.open rdonly"
-            return None
+            return (None, None)
 
-        return None
+        return (None, None)
 
     # FIXME mkdir() name conflicts with existing mkdir
     def mkdir2(self, path):

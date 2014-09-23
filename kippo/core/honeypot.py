@@ -22,6 +22,7 @@ from kippo.core.config import config
 import kippo.commands
 
 import ConfigParser
+import hashlib
 
 class HoneyPotCommand(object):
     def __init__(self, honeypot, *args):
@@ -840,10 +841,9 @@ class KippoSFTPFile:
             del attrs["permissions"]
         else:
             mode = 0777
-        fd = server.fs.open(filename, openFlags, mode)
+        self.fd, self.realfile = server.fs.open(filename, openFlags, mode)
         if attrs:
             self.server.setAttrs(filename, attrs)
-        self.fd = fd
 
         # cache a copy of file in memory to read from in readChunk
         if flags & FXF_READ == FXF_READ:
@@ -852,6 +852,10 @@ class KippoSFTPFile:
     def close(self):
         if ( self.bytes_written > 0 ):
             self.server.fs.update_size(self.filename, self.bytes_written) 
+        if self.realfile is not None:
+            shasum = hashlib.sha256(open(self.realfile, 'rb').read()).hexdigest()
+            msg = 'SHA sum %s of file %s' % (shasum, self.realfile)
+            print msg
         return self.server.fs.close(self.fd)
 
     def readChunk(self, offset, length):
