@@ -22,7 +22,7 @@ from kippo.core.config import config
 import kippo.commands
 
 import ConfigParser
-import hashlib
+import hashlib, shutil
 
 class HoneyPotCommand(object):
     def __init__(self, honeypot, *args):
@@ -852,10 +852,24 @@ class KippoSFTPFile:
     def close(self):
         if ( self.bytes_written > 0 ):
             self.server.fs.update_size(self.filename, self.bytes_written) 
+
         if self.realfile is not None:
             shasum = hashlib.sha256(open(self.realfile, 'rb').read()).hexdigest()
             msg = 'SHA sum %s of file %s' % (shasum, self.realfile)
             print msg
+
+            cfg = config()
+            hash_path = '%s/%s' % (cfg.get('honeypot', 'download_path'), shasum)
+
+            if not os.path.exists(hash_path):
+                print "moving " + self.realfile + " -> " + hash_path
+                shutil.move(self.realfile, hash_path)
+            else:
+                print "deleting " + self.realfile + " with sha sum " + shasum
+                os.remove(self.realfile)
+            f = self.server.fs.getfile(self.filename)
+            f[9] = hash_path
+
         return self.server.fs.close(self.fd)
 
     def readChunk(self, offset, length):
