@@ -34,6 +34,8 @@ class DBLogger(object):
                 self.handleFileDownload),
             ('^:dispatch: SHA sum (?P<shasum>.*) of URL (?P<url>.*) in file (?P<outfile>.*)$',
                 self.handleShaSum),
+            ('^SHA sum (?P<shasum>.*) of file (?P<outfile>.*)$',
+                self.handleSFTPDownload),
             ('^:dispatch: Updated outfile (?P<outfile>.*) to (?P<dl_file>.*) with SHA sum (?P<shasum>.*)$',
                 self.handleUpdatedFile),
             ('^INPUT \((?P<realm>[a-zA-Z0-9]+)\): (?P<input>.*)$',
@@ -147,6 +149,10 @@ class DBLogger(object):
 
     # args has: url, outfile
     def handleFileDownload(self, session, args):
+        pass
+
+    # args has: shasum, outfile
+    def handleSFTPDownload(self, session, args):
         pass
 
     # args has: shasum, url, outfile

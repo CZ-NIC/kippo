@@ -146,6 +146,12 @@ class DBLogger(dblog.DBLogger):
             ' VALUES (%s, FROM_UNIXTIME(%s), %s, %s)',
             (session, self.nowUnix(), args['url'], args['outfile']))
 
+    def handleSFTPDownload(self, session, args):
+        self.simpleQuery('INSERT INTO `downloads`' + \
+            ' (`session`, `timestamp`, `url`, `outfile`, `shasum`)' + \
+            ' VALUES (%s, FROM_UNIXTIME(%s), %s, %s, %s)',
+            (session, self.nowUnix(), 'SFTP', args['outfile'], args['shasum']))
+
     def handleShaSum(self, session, args):
          self.simpleQuery('UPDATE `downloads` SET `shasum` = %s' + \
             '  WHERE `outfile` = %s',
