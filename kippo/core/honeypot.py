@@ -273,7 +273,6 @@ class HoneyPotProtocol(recvline.HistoricRecvLine):
 
     def logDispatch(self, msg):
         transport = self.terminal.transport.session.conn.transport
-        msg = ':dispatch: ' + msg
         transport.factory.logDispatch(transport.transport.sessionno, msg)
 
     def connectionMade(self):

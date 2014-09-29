@@ -17,6 +17,7 @@ class DBLogger(object):
         # :dispatch: means the message has been delivered directly via
         # logDispatch, instead of relying on the twisted logging, which breaks
         # on scope changes.
+        # but now i deleted ':dispatch:'
         self.re_map = [(re.compile(x[0]), x[1]) for x in (
             ('^connection lost$',
                 self._connectionLost),
@@ -26,17 +27,17 @@ class DBLogger(object):
                 self.handleLoginSucceeded),
             ('^Opening TTY log: (?P<logfile>.*)$',
                 self.handleTTYLogOpened),
-            ('^:dispatch: Command found: (?P<input>.*)$',
+            ('^Command found: (?P<input>.*)$',
                 self.handleCommand),
-            ('^:dispatch: Command not found: (?P<input>.*)$',
+            ('^Command not found: (?P<input>.*)$',
                 self.handleUnknownCommand),
-            ('^:dispatch: Saving URL \((?P<url>.*)\) to (?P<outfile>.*)$',
+            ('^Saving URL \((?P<url>.*)\) to (?P<outfile>.*)$',
                 self.handleFileDownload),
-            ('^:dispatch: SHA sum (?P<shasum>.*) of URL (?P<url>.*) in file (?P<outfile>.*)$',
+            ('^SHA sum (?P<shasum>.*) of URL (?P<url>.*) in file (?P<outfile>.*)$',
                 self.handleShaSum),
             ('^SHA sum (?P<shasum>.*) of file (?P<outfile>.*)$',
                 self.handleSFTPDownload),
-            ('^:dispatch: Updated outfile (?P<outfile>.*) to (?P<dl_file>.*) with SHA sum (?P<shasum>.*)$',
+            ('^Updated outfile (?P<outfile>.*) to (?P<dl_file>.*) with SHA sum (?P<shasum>.*)$',
                 self.handleUpdatedFile),
             ('^INPUT \((?P<realm>[a-zA-Z0-9]+)\): (?P<input>.*)$',
                 self.handleInput),
