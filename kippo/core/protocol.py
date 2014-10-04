@@ -182,13 +182,6 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         self.setTypeoverMode()
         HoneyPotBaseProtocol.call_command(self, cmd, *args)
 
-    def keystrokeReceived(self, keyID, modifier):
-        transport = self.terminal.transport.session.conn.transport
-#        if type(keyID) == type(''):
-#            ttylog.ttylog_write(transport.ttylog_file, len(keyID),
-#                ttylog.TYPE_INPUT, time.time(), keyID)
-        recvline.HistoricRecvLine.keystrokeReceived(self, keyID, modifier)
-
     # Easier way to implement password input?
     def characterReceived(self, ch, moreCharactersComing):
         if self.mode == 'insert':
