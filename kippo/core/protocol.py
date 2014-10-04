@@ -141,6 +141,11 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
         print 'Running exec command "%s"' % self.execcmd
         self.cmdstack[0].lineReceived(self.execcmd)
 
+#        self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
+#        self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
+#        return
+#
+
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
     def __init__(self, user, env):
@@ -231,6 +236,11 @@ class LoggingServerProtocol(insults.ServerProtocol):
         transport.ttylog_open = True
 
         insults.ServerProtocol.connectionMade(self)
+        transport.stdinlog_file = '%s/tty/%s-%s.log' % \
+            (config().get('honeypot', 'download_path'),
+            time.strftime('%Y%m%d-%H%M%S'),
+            int(random.random() * 10000))
+        transport.stdinlog_open = True
 
     def write(self, bytes, noLog = False):
         transport = self.transport.session.conn.transport
@@ -246,6 +256,11 @@ class LoggingServerProtocol(insults.ServerProtocol):
         if transport.ttylog_open and not noLog:
             ttylog.ttylog_write(transport.ttylog_file, len(data),
                 ttylog.TYPE_INPUT, time.time(), data)
+
+        if transport.stdinlog_open and not noLog:
+            f = file( transport.stdinlog_file, 'ab' )
+            f.write(data)
+            f.close
         insults.ServerProtocol.dataReceived(self, data)
 
     # this doesn't seem to be called upon disconnect, so please use 
