@@ -6,7 +6,7 @@ import string
 import twisted
 from twisted.cred import checkers, credentials, error
 from twisted.internet import defer
-from zope.interface import implements
+from zope.interface import implementer
 
 from kippo.core.config import config
 
@@ -99,8 +99,8 @@ class UserDB(object):
         self.userdb.append((login, uid, passwd))
         self.save()
 
+@implementer(checkers.ICredentialsChecker)
 class HoneypotPasswordChecker:
-    implements(checkers.ICredentialsChecker)
 
     credentialInterfaces = (credentials.IUsernamePassword,
         credentials.IPluggableAuthenticationModules)
