@@ -33,7 +33,7 @@ class DBLogger(object):
                 self.handleUnknownCommand),
             ('^Saving URL \((?P<url>.*)\) to (?P<outfile>.*)$',
                 self.handleFileDownload),
-            ('^SHA sum (?P<shasum>.*) of URL (?P<url>.*) in file (?P<outfile>.*)$',
+            ('^[0-9\.]* SHA sum (?P<shasum>.*) of URL (?P<url>.*) in file (?P<outfile>.*)$',
                 self.handleShaSum),
             ('^SHA sum (?P<shasum>.*) of file (?P<outfile>.*)$',
                 self.handleSFTPDownload),

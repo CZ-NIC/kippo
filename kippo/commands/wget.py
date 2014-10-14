@@ -128,8 +128,9 @@ class command_wget(HoneyPotCommand):
         shasum = hashlib.sha256(open(self.safeoutfile, 'rb').read()).hexdigest()
         hash_path = '%s/%s' % (self.download_path, shasum)
 
-        msg = 'SHA sum %s of URL %s in file %s' % \
-            (shasum, self.url, self.fileName)
+        msg = '%s SHA sum %s of URL %s in file %s' % \
+            (self.honeypot.realClientIP, shasum,
+            self.url, self.fileName)
         print msg
         self.honeypot.logDispatch(msg)
 
