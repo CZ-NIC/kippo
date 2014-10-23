@@ -853,7 +853,12 @@ class KippoSFTPFile:
             self.server.fs.update_size(self.filename, self.bytes_written) 
 
         if self.realfile is not None:
-            shasum = hashlib.sha256(open(self.realfile, 'rb').read()).hexdigest()
+            try:
+                shasum = hashlib.sha256(open(self.realfile, 'rb').read()).hexdigest()
+            except Exception as e:
+                print format(e)
+                return self.server.fs.close(self.fd)
+
             msg = 'SHA sum %s of file %s' % (shasum, self.realfile)
             print msg
 
