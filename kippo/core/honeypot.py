@@ -56,7 +56,7 @@ class HoneyPotShell(object):
 
     def lineReceived(self, line):
         print 'CMD: %s' % line
-        for i in [x.strip() for x in line.strip().split(';')]:
+        for i in [x.strip() for x in split(';|&&|\n',line.strip())[:10]]:
             if not len(i):
                 continue
             self.cmdpending.append(i)
