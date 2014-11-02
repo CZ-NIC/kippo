@@ -1,7 +1,10 @@
 # Copyright (c) 2009-2014 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
 
-import os, pickle, shlex, copy
+import pickle, copy
+import os
+import shlex
+import re
 
 import twisted
 from twisted.conch.ssh import transport
@@ -56,7 +59,7 @@ class HoneyPotShell(object):
 
     def lineReceived(self, line):
         print 'CMD: %s' % line
-        for i in [x.strip() for x in split(';|&&|\n',line.strip())[:10]]:
+        for i in [x.strip() for x in re.split(';|&&|\n',line.strip())[:10]]:
             if not len(i):
                 continue
             self.cmdpending.append(i)
