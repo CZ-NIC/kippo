@@ -1,5 +1,13 @@
 # Copyright (c) 2009-2014 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
+
+import os
+import copy
+import time
+import uuid
+
+from zope.interface import implementer
+
 import twisted
 from twisted.cred import portal
 from twisted.conch import avatar, interfaces as conchinterfaces
@@ -7,13 +15,8 @@ from twisted.conch.ssh import factory, userauth, connection, keys, session, tran
 from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_CREAT, FXF_TRUNC, FXF_EXCL
 import twisted.conch.ls
 from twisted.python import log, components
-from zope.interface import implementer
-
 from twisted.conch.openssh_compat import primes
 
-import os
-import copy
-import time
 import ConfigParser
 
 import ttylog, utils, fs, honeypot
@@ -27,6 +30,7 @@ from kippo.core import virustotal
 from kippo.core import virustotal_backlogs
 
 from twisted.conch.ssh.common import NS, getNS
+
 class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
     def serviceStarted(self):
         userauth.SSHUserAuthServer.serviceStarted(self)
@@ -148,19 +152,32 @@ class HoneyPotRealm:
             raise Exception, "No supported interfaces found."
 
 class HoneyPotTransport(transport.SSHServerTransport):
+    """
+    @ivar logintime: time of login
 
-    hadVersion = False
-    transport.SSHServerTransport.supportedPublicKeys = ['ssh-rsa', 'ssh-dss']
-    transport.SSHServerTransport.supportedCompressions = ['none', 'zlib@openssh.com']
+    @ivar interactors: interactors
+
+    @ivar ttylog_open: whether log is open
+
+    @ivar uuid: unique UUID of this transport
+
+    @ivar _hadVersion: used so we only send key exchange after receive version info
+    """
+
+    _hadVersion = False
+    ttylog_open = False
+    interactors = []
+    transportId = ''
 
     def connectionMade(self):
-        print 'New connection: %s:%s (%s:%s) [session: %d]' % \
+        self.logintime = time.time()
+        self.transportId = uuid.uuid4().hex
+
+        log.msg( 'New connection: %s:%s (%s:%s) [session: %d]' % \
             (self.transport.getPeer().host, self.transport.getPeer().port,
             self.transport.getHost().host, self.transport.getHost().port,
-            self.transport.sessionno)
-        self.interactors = []
-        self.logintime = time.time()
-        self.ttylog_open = False
+            self.transport.sessionno) )
+
         transport.SSHServerTransport.connectionMade(self)
 
     def sendKexInit(self):
@@ -173,9 +190,9 @@ class HoneyPotTransport(transport.SSHServerTransport):
         transport.SSHServerTransport.dataReceived(self, data)
         # later versions seem to call sendKexInit again on their own
         if twisted.version.major < 11 and \
-                not self.hadVersion and self.gotVersion:
+                not self._hadVersion and self.gotVersion:
             self.sendKexInit()
-            self.hadVersion = True
+            self._hadVersion = True
 
     def ssh_KEXINIT(self, packet):
         print 'Remote SSH version: %s' % (self.otherVersionString,)
@@ -227,6 +244,8 @@ class HoneyPotSSHSession(session.SSHSession):
         value, rest = getNS(rest)
         print 'request_env: %s=%s' % (name, value)
 
+
+# FIXME: recent twisted conch avatar.py uses IConchuser here
 @implementer(conchinterfaces.ISession)
 class HoneyPotAvatar(avatar.ConchUser):
 
@@ -531,7 +550,7 @@ components.registerAdapter( KippoSFTPServer, HoneyPotAvatar, conchinterfaces.ISF
 
 def KippoOpenConnectForwardingClient(remoteWindow, remoteMaxPacket, data, avatar):
     remoteHP, origHP = twisted.conch.ssh.forwarding.unpackOpen_direct_tcpip(data)
-    log.msg( "connection attempt to %s:%i" % remoteHP )
+    log.msg( "direct-tcp connection attempt to %s:%i" % remoteHP )
     return None
 
 # vim: set sw=4 et:
