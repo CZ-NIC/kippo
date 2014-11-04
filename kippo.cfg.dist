@@ -208,7 +208,7 @@ debug=true
 # [database_textlog] line.
 
 #[database_textlog]
-#logfile = kippo-textlog.log
+#logfile = log/kippo-textlog.log
 
 #[virustotal]
 #apikey = 
@@ -216,4 +216,4 @@ debug=true
 # JSON based logging module
 
 #[database_jsonlog]
-#logfile = kippolog.json
+#logfile = log/kippolog.json
