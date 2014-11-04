@@ -212,3 +212,8 @@ debug=true
 
 #[virustotal]
 #apikey = 
+
+# JSON based logging module
+
+#[database_jsonlog]
+#logfile = kippolog.json
