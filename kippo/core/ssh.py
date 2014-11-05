@@ -118,6 +118,8 @@ class HoneyPotSSHFactory(factory.SSHFactory):
             self.dbloggers.append(dblogger)
 
     def buildProtocol(self, addr):
+
+        _moduli = '/etc/ssh/moduli'
         cfg = config()
 
         t = HoneyPotTransport()
@@ -128,7 +130,8 @@ class HoneyPotSSHFactory(factory.SSHFactory):
 
         t.supportedPublicKeys = self.privateKeys.keys()
 
-        self.primes = primes.parseModuliFile('/etc/ssh/moduli')
+        if ( os.path.exists( _moduli ) ):
+            self.primes = primes.parseModuliFile( _moduli )
         if not self.primes:
             ske = t.supportedKeyExchanges[:]
             ske.remove('diffie-hellman-group-exchange-sha1')
