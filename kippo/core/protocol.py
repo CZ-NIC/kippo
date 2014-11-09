@@ -5,24 +5,25 @@ import os
 import random
 import time
 import struct
+
 from twisted.conch import recvline
 from twisted.conch.ssh import transport
 from twisted.conch.insults import insults
 from twisted.internet import protocol
-from copy import deepcopy, copy
+from copy import copy
 from kippo.core import ttylog, fs
 from kippo.core import honeypot
 from kippo.core.config import config
 from kippo import core
 
 class HoneyPotBaseProtocol(insults.TerminalProtocol):
-    def __init__(self, user, env):
-        self.user = user
+    def __init__(self, avatar, env):
+        self.user = avatar
         self.env = env
         self.hostname = self.env.cfg.get('honeypot', 'hostname')
-        self.fs = fs.HoneyPotFilesystem(deepcopy(self.env.fs))
-        if self.fs.exists(user.home):
-            self.cwd = user.home
+        self.fs = avatar.fs
+        if self.fs.exists(avatar.home):
+            self.cwd = avatar.home
         else:
             self.cwd = '/'
         # commands is also a copy so we can add stuff on the fly
@@ -129,9 +130,9 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
 
 class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
-    def __init__(self, user, env, execcmd):
+    def __init__(self, avatar, env, execcmd):
         self.execcmd = execcmd
-        HoneyPotBaseProtocol.__init__(self, user, env)
+        HoneyPotBaseProtocol.__init__(self, avatar, env)
 
     def connectionMade(self):
         HoneyPotBaseProtocol.connectionMade(self)
@@ -148,9 +149,9 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
-    def __init__(self, user, env):
+    def __init__(self, avatar, env):
         recvline.HistoricRecvLine.__init__(self)
-        HoneyPotBaseProtocol.__init__(self, user, env)
+        HoneyPotBaseProtocol.__init__(self, avatar, env)
 
     def connectionMade(self):
         HoneyPotBaseProtocol.connectionMade(self)
