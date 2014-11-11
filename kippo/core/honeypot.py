@@ -1,13 +1,11 @@
 # Copyright (c) 2009-2014 Upi Tamminen <desaster@gmail.com>
 # See the COPYRIGHT file for more information
 
-import pickle, copy
 import os
 import shlex
 import re
-
-import twisted
-from twisted.conch.ssh import transport
+import copy
+import pickle
 
 import fs
 from config import config

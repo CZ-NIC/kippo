@@ -16,20 +16,18 @@ from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_
 import twisted.conch.ls
 from twisted.python import log, components
 from twisted.conch.openssh_compat import primes
+from twisted.conch.ssh.common import NS, getNS
 
 import ConfigParser
 
 import ttylog, utils, fs, honeypot
 import kippo.core.protocol
 from config import config
-from kippo import core
 from kippo.core.auth import UserDB
 
 import hashlib, shutil
 from kippo.core import virustotal
 from kippo.core import virustotal_backlogs
-
-from twisted.conch.ssh.common import NS, getNS
 
 class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
     def serviceStarted(self):
