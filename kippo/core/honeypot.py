@@ -14,8 +14,8 @@ from config import config
 import kippo.commands
 
 class HoneyPotCommand(object):
-    def __init__(self, honeypot, *args):
-        self.honeypot = honeypot
+    def __init__(self, protocol, *args):
+        self.honeypot = protocol
         self.args = args
         self.writeln = self.honeypot.writeln
         self.write = self.honeypot.terminal.write
@@ -48,8 +48,8 @@ class HoneyPotCommand(object):
         pass
 
 class HoneyPotShell(object):
-    def __init__(self, honeypot, interactive = True):
-        self.honeypot = honeypot
+    def __init__(self, protocol, interactive = True):
+        self.honeypot = protocol
         self.interactive = interactive
         self.showPrompt()
         self.cmdpending = []
