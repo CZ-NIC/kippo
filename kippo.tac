@@ -28,9 +28,11 @@ from kippo.core.config import config
 factory = ssh.HoneyPotSSHFactory()
 factory.portal = portal.Portal(ssh.HoneyPotRealm())
 
+factory.portal.registerChecker(auth.HoneypotPublicKeyChecker())
+factory.portal.registerChecker(auth.HoneypotPasswordChecker())
+
 rsa_pubKeyString, rsa_privKeyString = ssh.getRSAKeys()
 dsa_pubKeyString, dsa_privKeyString = ssh.getDSAKeys()
-factory.portal.registerChecker(auth.HoneypotPasswordChecker())
 factory.publicKeys = {'ssh-rsa': keys.Key.fromString(data=rsa_pubKeyString),
                       'ssh-dss': keys.Key.fromString(data=dsa_pubKeyString)}
 factory.privateKeys = {'ssh-rsa': keys.Key.fromString(data=rsa_privKeyString),
