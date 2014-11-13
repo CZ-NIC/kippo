@@ -476,7 +476,7 @@ class KippoSFTPServer:
 
     def __init__(self, avatar):
         self.avatar = avatar
-        self.fs = self.avatar.env.fs
+        self.fs = self.avatar.fs
 
     def _absPath(self, path):
         home = self.avatar.home
