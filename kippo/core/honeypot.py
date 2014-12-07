@@ -7,9 +7,8 @@ import re
 import copy
 import pickle
 
-import fs
-from config import config
-import kippo.commands
+from kippo.core import fs
+from kippo.core.config import config
 
 class HoneyPotCommand(object):
     def __init__(self, protocol, *args):
