@@ -210,11 +210,8 @@ class HoneyPotFilesystem(object):
         if (openFlags & os.O_EXCL == os.O_EXCL):
             print "fs.open excl"
 
-        if openFlags & os.O_RDWR == os.O_RDWR:
-            print "fs.open rdwr"
-            raise notImplementedError
-
-        elif openFlags & os.O_WRONLY == os.O_WRONLY:
+        # treat O_RDWR same as O_WRONLY
+        if openFlags & os.O_WRONLY == os.O_WRONLY or openFlags & os.O_RDWR == os.O_RDWR:
             # ensure we do not save with executable bit set
             realmode = mode & ~(stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
