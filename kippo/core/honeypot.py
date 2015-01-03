@@ -56,8 +56,11 @@ class HoneyPotShell(object):
 
     def lineReceived(self, line):
         print 'CMD: %s' % line
+        comment = re.compile( '^\s*#' )
         for i in [x.strip() for x in re.split(';|&&|\n',line.strip())[:10]]:
             if not len(i):
+                continue
+            if comment.match(i):
                 continue
             self.cmdpending.append(i)
         if len(self.cmdpending):
