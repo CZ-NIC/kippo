@@ -23,3 +23,4 @@
 * logstash and kibana config files added, based on JSON log
 * fix for honeypot detection (pre-auth differences with openssh)
 * fixes for behavior with non-existent files (cd /test, cat /test/nonexistent, etc)
+* fix for ability to ping/ssh non-existent IP address
