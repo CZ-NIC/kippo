@@ -143,8 +143,7 @@ ssh_version_string = SSH-2.0-OpenSSH_5.1p1 Debian-5
 
 # Banner file to be displayed before the first login attempt.
 #
-# (default: not specified)
-#banner_file =
+#banner_file = DEPRECATED; always '/etc/issue.net' in honeyfs
 
 # Session management interface.
 #
