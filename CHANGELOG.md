@@ -35,3 +35,4 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 * add 'users' aliased to 'whoami'
 * add 'killall' and 'killall5' aliased to nop
 * add 'poweroff' 'halt' and 'reboot' aliases for shutdown
+* add 'which' and environment passing to commands
