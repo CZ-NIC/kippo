@@ -17,4 +17,5 @@ __all__ = [
     'fs',
     'malware',
     'which',
+    'gcc'
     ]
