@@ -1,3 +1,6 @@
+This fork might not run on OpenSUSE 11.4 (works fine on 13.1).
+In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo sandbox detecting).
+
 * log and deny direct-tcpip attempts (micheloosterhof)
 * change exec handling so the command is allowed to run long enough for wget to work (desaster)
 * default behaviour is changed to disable the exit jail
@@ -27,6 +30,8 @@
 * always send ssh exit-status 0 on exec and shell
 * ls output is now alphabetically sorted
 * banner_file is deprecated. honeyfs/etc/issue.net is default
-
-This fork might not run on OpenSUSE 11.4 (works fine on 13.1).
-In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo sandbox detecting).
+* add 'dir' alias for 'ls'
+* add 'help' bash builtin
+* add 'users' aliased to 'whoami'
+* add 'killall' and 'killall5' aliased to nop
+* add 'poweroff' 'halt' and 'reboot' aliases for shutdown
