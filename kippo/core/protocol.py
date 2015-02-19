@@ -264,8 +264,10 @@ class LoggingServerProtocol(insults.ServerProtocol):
             f.close
         insults.ServerProtocol.dataReceived(self, data)
 
-    # this doesn't seem to be called upon disconnect, so please use 
-    # HoneyPotTransport.connectionLost instead
+    # override super to remove the terminal reset on logout
+    def loseConnection(self):
+        self.transport.loseConnection()
+
     def connectionLost(self, reason):
         insults.ServerProtocol.connectionLost(self, reason)
 
