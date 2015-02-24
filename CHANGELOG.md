@@ -12,7 +12,7 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 * allow wget download over non-80 port
 * simple JSON logging to kippo.json
 * accept log and deny publickey authentication
-* add uname -r command
+* add uname -r, -m flags
 * add working sleep command
 * enabled ssh diffie-hellman-group-exchange-sha1 algorithm
 * add 'bash -c' support (no effect option)
