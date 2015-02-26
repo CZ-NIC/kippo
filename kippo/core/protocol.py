@@ -36,8 +36,6 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         transport.factory.logDispatch(transport.transport.sessionno, msg)
 
     def connectionMade(self):
-        self.displayMOTD()
-
         transport = self.terminal.transport.session.conn.transport
 
         self.realClientIP = transport.transport.getPeer().host
@@ -51,12 +49,6 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
             self.clientIP = cfg.get('honeypot', 'fake_addr')
         else:
             self.clientIP = self.realClientIP
-
-    def displayMOTD(self):
-        try:
-            self.writeln(self.fs.file_contents('/etc/motd'))
-        except:
-            pass
 
     # this doesn't seem to be called upon disconnect, so please use 
     # HoneyPotTransport.connectionLost instead
@@ -154,6 +146,7 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         HoneyPotBaseProtocol.__init__(self, avatar, env)
 
     def connectionMade(self):
+        self.displayMOTD()
         HoneyPotBaseProtocol.connectionMade(self)
         recvline.HistoricRecvLine.connectionMade(self)
 
@@ -175,6 +168,12 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
             '\x10':     self.handle_UP,		# CTRL-P
             '\x15':     self.handle_CTRL_U,	# CTRL-U
             })
+
+    def displayMOTD(self):
+        try:
+            self.writeln(self.fs.file_contents('/etc/motd'))
+        except:
+            pass
 
     # this doesn't seem to be called upon disconnect, so please use
     # HoneyPotTransport.connectionLost instead
