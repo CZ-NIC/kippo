@@ -3,6 +3,7 @@
 
 from kippo.core.honeypot import HoneyPotCommand
 from kippo.core.fs import *
+from kippo.core import virustotal
 from twisted.web import client
 from twisted.internet import reactor
 import stat, time, urlparse, random, re, exceptions
@@ -135,6 +136,11 @@ class command_wget(HoneyPotCommand):
         self.honeypot.logDispatch(msg)
 
         if not os.path.exists(hash_path):
+            cfg = self.honeypot.env.cfg
+            if cfg.has_option('virustotal', 'apikey'):
+                apikey = cfg.get('virustotal', 'apikey')
+                virustotal.get_report(apikey, shasum, self.url, self.honeypot)
+
             print "moving " + self.safeoutfile + " -> " + hash_path
             shutil.move(self.safeoutfile, hash_path)
         else:

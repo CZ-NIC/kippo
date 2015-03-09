@@ -60,3 +60,13 @@ CREATE TABLE `downloads` (
   PRIMARY KEY  (`id`),
   KEY `session` (`session`,`timestamp`)
 ) ;
+
+CREATE TABLE `virustotals` (
+  `id` int(11) NOT NULL auto_increment,
+  `shasum` varchar(64) NOT NULL,
+  `url` text,
+  `timestamp` datetime NOT NULL,
+  `permalink` varchar(120) NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `virustotals_shasum` (`shasum`)
+) ;

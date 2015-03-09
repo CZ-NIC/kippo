@@ -45,6 +45,8 @@ class DBLogger(object):
                 self.handleTerminalSize),
             ('^Remote SSH version: (?P<version>.*)$',
                 self.handleClientVersion),
+            ('^Virustotal report of (?P<shasum>.*) \[(?P<url>.*)\] at (?P<permalink>.*)$',
+                self.handleVirustotal),
             )]
         self.start(cfg)
 
@@ -162,6 +164,10 @@ class DBLogger(object):
 
     # args has: outfile, dl_file, shasum
     def handleUpdatedFile(self, session, args):
+        pass
+
+    # args has: shasum, url, permalink
+    def handleVirustotal(self, session, args):
         pass
 
 # vim: set sw=4 et:

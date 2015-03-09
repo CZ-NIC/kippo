@@ -209,3 +209,6 @@ debug=true
 
 #[database_textlog]
 #logfile = kippo-textlog.log
+
+#[virustotal]
+#apikey = 

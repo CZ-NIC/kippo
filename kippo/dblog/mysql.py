@@ -157,4 +157,10 @@ class DBLogger(dblog.DBLogger):
             '  WHERE `outfile` = %s',
             (args['shasum'], args['outfile']))
 
+    def handleVirustotal(self, session, args):
+        self.simpleQuery('INSERT INTO `virustotals`' + \
+            ' (`shasum`, `url`, `timestamp`, `permalink`)' + \
+            ' VALUES (%s, %s, FROM_UNIXTIME(%s), %s)',
+            (args['shasum'], args['url'], self.nowUnix(), args['permalink']))
+
 # vim: set sw=4 et:
