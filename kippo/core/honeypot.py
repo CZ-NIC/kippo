@@ -16,7 +16,7 @@ from twisted.python import log, components
 from twisted.conch.ssh import filetransfer
 from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_CREAT, FXF_TRUNC, FXF_EXCL
 
-from kippo.core import ttylog, fs, utils
+from kippo.core import ttylog, fs, utils, virustotal
 from kippo.core.userdb import UserDB
 from kippo.core.config import config
 import kippo.commands
@@ -866,6 +866,10 @@ class KippoSFTPFile:
             hash_path = '%s/%s' % (cfg.get('honeypot', 'download_path'), shasum)
 
             if not os.path.exists(hash_path):
+                if cfg.has_option('virustotal', 'apikey'):
+                    apikey = cfg.get('virustotal', 'apikey')
+                    virustotal.get_report(apikey, shasum, 'SFTP')
+
                 print "moving " + self.realfile + " -> " + hash_path
                 shutil.move(self.realfile, hash_path)
             else:
