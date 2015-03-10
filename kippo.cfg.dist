@@ -216,3 +216,8 @@ debug=true
 
 #[database_jsonlog]
 #logfile = log/kippolog.json
+
+# EXPERIMENTAL new output module
+#
+#[output_jsonlog]
+#logfile = log/output.json
