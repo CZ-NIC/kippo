@@ -107,6 +107,7 @@ class Output(object):
             return
 
         ev = copy.copy(event)
+        del ev['isError']
 
         # add ISO timestamp and sensor data
         if not 'time' in ev:
