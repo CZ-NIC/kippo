@@ -84,6 +84,11 @@ class Output(object):
         """Abstract method to shut down output plugin"""
         pass
 
+    @abc.abstractmethod
+    def handleLog( self, session, event ):
+        """Handle a general event within the output plugin"""
+        pass
+
     # this is the main emit() hook that gets called by the the Twisted logging
     def emit(self, ev):
         # ignore stdout and stderr in output plugins
@@ -127,10 +132,5 @@ class Output(object):
 
         self.handleLog( self.sessions[sessionid], ev )
         # print "error calling handleLog for event  %s" % repr(ev)
-
-    @abc.abstractmethod
-    def handleLog( self, session, event ):
-        """Handle a general event within the output plugin"""
-        pass
 
 # vim: set sw=4 et:
