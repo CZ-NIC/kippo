@@ -21,7 +21,7 @@ from twisted.conch.ssh.common import NS, getNS
 
 import ConfigParser
 
-from kippo.core import ttylog, utils, fs, honeypot, sshserver
+from kippo.core import ttylog, fs, honeypot, sshserver
 import kippo.core.protocol
 from config import config
 from kippo.core.auth import UserDB
@@ -205,7 +205,6 @@ class HoneyPotTransport(kippo.core.sshserver.KippoSSHServerTransport):
     transportId = ''
 
     def connectionMade(self):
-        self.logintime = time.time()
         self.transportId = uuid.uuid4().hex
 
         log.msg( 'New connection: %s:%s (%s:%s) [session: %d]' % \
@@ -233,23 +232,12 @@ class HoneyPotTransport(kippo.core.sshserver.KippoSSHServerTransport):
         print 'Remote SSH version: %s' % (self.otherVersionString,)
         return kippo.core.sshserver.KippoSSHServerTransport.ssh_KEXINIT(self, packet)
 
-    def lastlogExit(self):
-        starttime = time.strftime('%a %b %d %H:%M',
-            time.localtime(self.logintime))
-        endtime = time.strftime('%H:%M',
-            time.localtime(time.time()))
-        duration = utils.durationHuman(time.time() - self.logintime)
-        clientIP = self.transport.getPeer().host
-        utils.addToLastlog('root\tpts/0\t%s\t%s - %s (%s)' % \
-            (clientIP, starttime, endtime, duration))
-
     # this seems to be the only reliable place of catching lost connection
     def connectionLost(self, reason):
         for i in self.interactors:
             i.sessionClosed()
         if self.transport.sessionno in self.factory.sessions:
             del self.factory.sessions[self.transport.sessionno]
-        self.lastlogExit()
         if self.ttylog_open:
             ttylog.ttylog_close(self.ttylog_file, time.time())
             self.ttylog_open = False
