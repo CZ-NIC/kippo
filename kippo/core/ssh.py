@@ -71,7 +71,8 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
                     transport.DISCONNECT_PROTOCOL_ERROR,
                     "only one keyboard interactive attempt at a time")
             return defer.fail(error.IgnoreAuthentication())
-        c = auth.PluggableAuthenticationModulesIP(self.user, self._pamConv, self.transport.src_ip)
+        src_ip=self.transport.getPeer().address.host
+        c = auth.PluggableAuthenticationModulesIP(self.user, self._pamConv, src_ip)
         return self.portal.login(c, None, conchinterfaces.IConchUser)
 
 # As implemented by Kojoney
@@ -226,8 +227,6 @@ class HoneyPotTransport(kippo.core.sshserver.KippoSSHServerTransport):
     def connectionMade(self):
         self.transportId = uuid.uuid4().hex
         self.interactors = []
-        # store src_ip to use in HoneyPotSSHUserAuthServer
-        self.src_ip=self.transport.getPeer().host
 
         log.msg( 'New connection: %s:%s (%s:%s) [session: %d]' % \
             (self.transport.getPeer().host, self.transport.getPeer().port,
