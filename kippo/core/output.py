@@ -49,7 +49,7 @@ import uuid
 class Output(object):
     """
     This is the abstract base class intended to be inherited by kippo output plugins
-    Plugins require the mandatory methods: stop, start and handleLog
+    Plugins require the mandatory methods: stop, start and write
     """
 
     __metaclass__ = abc.ABCMeta
@@ -93,7 +93,7 @@ class Output(object):
         pass
 
     @abc.abstractmethod
-    def handleLog(self, session, event):
+    def write(self, event):
         """Handle a general event within the output plugin"""
         pass
 
@@ -149,7 +149,9 @@ class Output(object):
             self.ips[sessionno] = ev['src_ip']
             del ev['system']
 
-        self.handleLog(self.sessions[sessionno], ev)
+        ev['session'] = self.sessions[sessionno]
+
+        self.write(ev)
 
         # disconnect is special, remove cached data
         if ev['eventid'] == 'KIPP0011':
