@@ -230,12 +230,10 @@ debug=true
 #[virustotal]
 #apikey = 
 
-# JSON based logging module
-
+# deprecated JSON based logging module
 #[database_jsonlog]
 #logfile = log/kippolog.json
 
-# EXPERIMENTAL new output module
-#
+# new default output module
 #[output_jsonlog]
-#logfile = log/output.json
+#logfile = log/kippo.json
