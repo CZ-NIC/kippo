@@ -8,7 +8,7 @@ import twisted
 import twisted.conch.ls
 from twisted.cred import checkers, credentials, error
 from twisted.conch import avatar, recvline, interfaces as conchinterfaces
-from twisted.conch.ssh import factory, userauth, session, transport
+from twisted.conch.ssh import factory, userauth, session, transport, forwarding
 from twisted.conch.insults import insults
 from twisted.internet import defer
 from twisted.python import log, components
@@ -487,6 +487,7 @@ class HoneyPotAvatar(avatar.ConchUser):
         self.env = env
         self.channelLookup.update({'session': HoneyPotSSHSession})
         self.windowSize = [80,24]
+        self.channelLookup['direct-tcpip'] = KippoOpenConnectForwardingClient
 
         # disabled by default
         if self.env.cfg.has_option('honeypot', 'sftp_enabled'):
@@ -1012,5 +1013,10 @@ class KippoSFTPServer:
         raise NotImplementedError
 
 components.registerAdapter( KippoSFTPServer, HoneyPotAvatar, conchinterfaces.ISFTPServer)
+
+def KippoOpenConnectForwardingClient(remoteWindow, remoteMaxPacket, data, avatar):
+    remoteHP, origHP = twisted.conch.ssh.forwarding.unpackOpen_direct_tcpip(data)
+    log.msg( "connection attempt to %s:%i" % remoteHP )
+    return None
 
 # vim: set sw=4 et:
