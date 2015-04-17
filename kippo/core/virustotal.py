@@ -28,3 +28,6 @@ def get_report(apikey, resource, dl_url='unknown', honeypot=None):
         else:
             # we need to print msg, because logs from SFTP are dispatched this way
             print msg
+    else:
+        msg = 'Virustotal not known, response code: %s' % (j['response_code'])
+        print msg
