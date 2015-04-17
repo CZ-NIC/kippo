@@ -20,3 +20,11 @@ def get_report(apikey, resource, dl_url='unknown', honeypot=None):
         print msg
         if honeypot:
             honeypot.logDispatch(msg)
+
+        msg = 'virustotalscan %s in %s' % \
+            (resource, json)
+        if honeypot:
+            honeypot.logDispatch(msg)
+        else:
+            # we need to print msg, because logs from SFTP are dispatched this way
+            print msg

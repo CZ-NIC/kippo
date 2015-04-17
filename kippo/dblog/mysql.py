@@ -3,6 +3,7 @@ from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log
 import MySQLdb, uuid
+import simplejson
 
 class ReconnectingConnectionPool(adbapi.ConnectionPool):
     """Reconnecting adbapi connection pool for MySQL.
@@ -162,5 +163,28 @@ class DBLogger(dblog.DBLogger):
             ' (`shasum`, `url`, `timestamp`, `permalink`)' + \
             ' VALUES (%s, %s, FROM_UNIXTIME(%s), %s)',
             (args['shasum'], args['url'], self.nowUnix(), args['permalink']))
+
+    def handleVirustotalScan(self, session, args):
+        def insert_results(r):
+            scan_id = r[0][0]
+
+            json = simplejson.loads(args['json'])
+            scans = json['scans']
+
+            for av, val in scans.items():
+                res = val['result']
+                # not detected = '' -> NULL
+                if res == '':
+                    res = None
+
+                self.simpleQuery('INSERT INTO `virustotalscans`' + \
+                    ' (`scan_id`, `scanner`, `result`)' + \
+                    ' VALUES (%s, %s, %s)',
+                    (scan_id, av, res))
+
+        d = self.db.runQuery(
+            'SELECT `id` FROM `virustotals` WHERE `shasum` = %s',  (args['shasum'])
+        )
+        d.addCallbacks(insert_results, self.sqlerror)
 
 # vim: set sw=4 et:
