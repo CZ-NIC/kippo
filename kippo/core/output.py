@@ -65,7 +65,7 @@ class Output(object):
         else:
             self.sensor = socket.gethostname()
 
-        self.start(cfg)
+        self.start()
 
     # use logDispatch when the HoneypotTransport prefix is not available.
     # here you can explicitly set the sessionIds to tie the sessions together
