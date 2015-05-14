@@ -22,13 +22,14 @@ if not os.path.exists('kippo.cfg'):
     sys.exit(1)
 
 from kippo.core import honeypot
+from kippo.core import ssh
 from kippo.core.config import config
 
-factory = honeypot.HoneyPotSSHFactory()
-factory.portal = portal.Portal(honeypot.HoneyPotRealm())
+factory = ssh.HoneyPotSSHFactory()
+factory.portal = portal.Portal(ssh.HoneyPotRealm())
 
-rsa_pubKeyString, rsa_privKeyString = honeypot.getRSAKeys()
-dsa_pubKeyString, dsa_privKeyString = honeypot.getDSAKeys()
+rsa_pubKeyString, rsa_privKeyString = ssh.getRSAKeys()
+dsa_pubKeyString, dsa_privKeyString = ssh.getDSAKeys()
 factory.portal.registerChecker(honeypot.HoneypotPasswordChecker())
 factory.publicKeys = {'ssh-rsa': keys.Key.fromString(data=rsa_pubKeyString),
                       'ssh-dss': keys.Key.fromString(data=dsa_pubKeyString)}
