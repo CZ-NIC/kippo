@@ -17,6 +17,7 @@ import time
 import ConfigParser
 
 import ttylog, utils, fs, honeypot
+import kippo.core.protocol
 from config import config
 from kippo import core
 from userdb import UserDB
@@ -250,8 +251,8 @@ class HoneyPotAvatar(avatar.ConchUser):
             self.home = '/home/' + username
 
     def openShell(self, protocol):
-        serverProtocol = honeypot.LoggingServerProtocol(
-            honeypot.HoneyPotInteractiveProtocol, self, self.env)
+        serverProtocol = kippo.core.protocol.LoggingServerProtocol(
+            kippo.core.protocol.HoneyPotInteractiveProtocol, self, self.env)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
@@ -269,8 +270,8 @@ class HoneyPotAvatar(avatar.ConchUser):
                 raise os.OSError
 
         print 'Executing command'
-        serverProtocol = honeypot.LoggingServerProtocol(
-            honeypot.HoneyPotExecProtocol, self, self.env, cmd)
+        serverProtocol = kippo.core.protocol.LoggingServerProtocol(
+            kippo.core.protocol.HoneyPotExecProtocol, self, self.env, cmd)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
