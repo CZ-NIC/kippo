@@ -10,13 +10,14 @@ from twisted.application import internet, service
 from twisted.cred import portal
 
 from cowrie.core.config import config
+from cowrie.core.config import readConfigFile
 from cowrie import core
 import cowrie.core.ssh
 
 class Options(usage.Options):
     optParameters = [
         ["port", "p", 0, "The port number to listen on.", int],
-#        ["config", "c", 'cowrie.cfg', "The configuration file to use."]
+        ["config", "c", 'cowrie.cfg', "The configuration file to use."]
         ]
 
 @implementer(IServiceMaker, IPlugin)
@@ -34,7 +35,7 @@ class CowrieServiceMaker(object):
             print 'ERROR: You must not run cowrie as root!'
             sys.exit(1)
 
-        cfg = config()
+        cfg = readConfigFile(options["config"]))
 
         if cfg.has_option('honeypot', 'listen_addr'):
             listen_addr = cfg.get('honeypot', 'listen_addr')
@@ -49,7 +50,7 @@ class CowrieServiceMaker(object):
         else:
             listen_port = 2222
 
-        factory = core.ssh.HoneyPotSSHFactory()
+        factory = core.ssh.HoneyPotSSHFactory(cfg))
         factory.portal = portal.Portal(core.ssh.HoneyPotRealm())
         factory.portal.registerChecker(core.auth.HoneypotPublicKeyChecker())
         factory.portal.registerChecker(core.auth.HoneypotPasswordChecker())
