@@ -98,8 +98,7 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         for output in self.output_plugins:
             output.logDispatch(sessionid, msg)
 
-    def __init__(self):
-        cfg = config()
+    def __init__(self, cfg):
 
         # protocol^Wwhatever instances are kept here for the interact feature
         self.sessions = {}
