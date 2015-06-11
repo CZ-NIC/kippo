@@ -41,6 +41,7 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
         if self.bannerSent:
             return
         cfg = config()
+        self.bannerSent = True
         try:
             honeyfs = cfg.get('honeypot', 'contents_path')
             issuefile = honeyfs + "/etc/issue.net"
@@ -51,7 +52,6 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
             return
         self.transport.sendPacket(
             userauth.MSG_USERAUTH_BANNER, NS(data) + NS('en'))
-        self.bannerSent = True
 
     def ssh_USERAUTH_REQUEST(self, packet):
         self.sendBanner()
