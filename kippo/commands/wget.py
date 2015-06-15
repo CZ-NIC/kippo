@@ -4,6 +4,7 @@
 from kippo.core.honeypot import HoneyPotCommand
 from kippo.core.fs import *
 from kippo.core import virustotal
+from kippo.core import virustotal_backlogs
 from twisted.web import client
 from twisted.internet import reactor
 import stat
@@ -160,18 +161,22 @@ class command_wget(HoneyPotCommand):
         print msg
         self.honeypot.logDispatch(msg)
 
+        cfg = self.honeypot.env.cfg
         if not os.path.exists(hash_path):
-            cfg = self.honeypot.env.cfg
-            if cfg.has_option('virustotal', 'apikey'):
-                apikey = cfg.get('virustotal', 'apikey')
-                virustotal.get_report(apikey, shasum, self.url, self.honeypot)
-
             print "moving " + self.safeoutfile + " -> " + hash_path
             shutil.move(self.safeoutfile, hash_path)
+
+            if cfg.has_option('virustotal', 'apikey'):
+                apikey = cfg.get('virustotal', 'apikey')
+                virustotal.get_report(apikey, shasum, self.fakeoutfile.split('/')[-1], self.url, self.honeypot)
         else:
             print "deleting " + self.safeoutfile + " SHA sum: " + shasum
             os.remove(self.safeoutfile)
         self.safeoutfile = hash_path
+
+        if cfg.has_option('virustotal', 'apikey'):
+            print "now checking Virustotal backlogs wget"
+            virustotal_backlogs.check()
 
         print "Updating realfile to " + hash_path
         f = self.fs.getfile(self.outfile)
@@ -302,6 +307,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
 
         self.wget.fileName = self.fileName
         self.wget.outfile = self.fakeoutfile
+        self.wget.fakeoutfile = self.fakeoutfile
         return client.HTTPDownloader.pageEnd(self)
 
 # vim: set sw=4 et:

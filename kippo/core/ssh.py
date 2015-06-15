@@ -23,7 +23,8 @@ from kippo import core
 from userdb import UserDB
 
 import hashlib, shutil
-import virustotal
+from kippo.core import virustotal
+from kippo.core import virustotal_backlogs
 
 from twisted.conch.ssh.common import NS, getNS
 class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
@@ -360,6 +361,8 @@ class KippoSFTPFile:
             self.contents = self.server.fs.file_contents(self.filename)
 
     def close(self):
+        cfg = config()
+
         if ( self.bytes_written > 0 ):
             self.server.fs.update_size(self.filename, self.bytes_written) 
 
@@ -373,21 +376,24 @@ class KippoSFTPFile:
             msg = 'SHA sum %s of file %s' % (shasum, self.realfile)
             print msg
 
-            cfg = config()
             hash_path = '%s/%s' % (cfg.get('honeypot', 'download_path'), shasum)
 
             if not os.path.exists(hash_path):
-                if cfg.has_option('virustotal', 'apikey'):
-                    apikey = cfg.get('virustotal', 'apikey')
-                    virustotal.get_report(apikey, shasum, 'SFTP')
-
                 print "moving " + self.realfile + " -> " + hash_path
                 shutil.move(self.realfile, hash_path)
+
+                if cfg.has_option('virustotal', 'apikey'):
+                    apikey = cfg.get('virustotal', 'apikey')
+                    virustotal.get_report(apikey, shasum, self.filename, 'SFTP')
             else:
                 print "deleting " + self.realfile + " with sha sum " + shasum
                 os.remove(self.realfile)
             f = self.server.fs.getfile(self.filename)
             f[9] = hash_path
+
+        if cfg.has_option('virustotal', 'apikey'):
+            print "now checking Virustotal backlogs ssh"
+            virustotal_backlogs.check()
 
         return self.server.fs.close(self.fd)
 
