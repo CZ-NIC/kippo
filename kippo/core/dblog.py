@@ -46,9 +46,7 @@ class DBLogger(object):
             ('^Remote SSH version: (?P<version>.*)$',
                 self.handleClientVersion),
             ('^Virustotal report of (?P<shasum>.*) \[(?P<url>.*)\] at (?P<permalink>.*)$',
-                self.handleVirustotal),
-            ('^virustotalscan (?P<shasum>.*) in (?P<json>.*)$',
-                self.handleVirustotalScan),
+                self.handleVirustotalLog),
             )]
         self.start(cfg)
 
@@ -169,11 +167,7 @@ class DBLogger(object):
         pass
 
     # args has: shasum, url, permalink
-    def handleVirustotal(self, session, args):
-        pass
-
-    # args has: shasum, json
-    def handleVirustotalScan(self, session, args):
+    def handleVirustotalLog(self, session, args):
         pass
 
 # vim: set sw=4 et:

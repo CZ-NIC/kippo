@@ -30,7 +30,7 @@ class DBLogger(dblog.DBLogger):
         self.write(session, 'Updated wget outfile %s to %s' % \
             (args['outfile'], args['dl_file']))
 
-    def handleVirustotal(self, session, args):
+    def handleVirustotalLog(self, session, args):
         self.write(session, 'Virustotal report of %s at %s' % \
             (args['shasum'], args['permalink']))
 

@@ -158,13 +158,13 @@ class DBLogger(dblog.DBLogger):
             '  WHERE `outfile` = %s',
             (args['shasum'], args['outfile']))
 
-    def handleVirustotal(self, session, args):
+    def handleVirustotal(self, args):
         self.simpleQuery('INSERT INTO `virustotals`' + \
             ' (`shasum`, `url`, `timestamp`, `permalink`)' + \
             ' VALUES (%s, %s, FROM_UNIXTIME(%s), %s)',
             (args['shasum'], args['url'], self.nowUnix(), args['permalink']))
 
-    def handleVirustotalScan(self, session, args):
+    def handleVirustotalScan(self, args):
         def insert_results(r):
             scan_id = r[0][0]
 

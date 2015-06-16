@@ -4,6 +4,8 @@ import simplejson
 import postfile
 import virustotal_backlogs
 from kippo.core.config import config
+import kippo.dblog.mysql
+import kippo.dblog.textlog
 
 def get_report(resource, filename, dl_url='unknown', honeypot=None, origin=None):
     apikey = config().get('virustotal', 'apikey')
@@ -17,20 +19,31 @@ def get_report(resource, filename, dl_url='unknown', honeypot=None, origin=None)
     j = simplejson.loads(json)
 
     if j['response_code'] == 1: # file known
-        msg = 'Virustotal report of %s [%s] at %s' % \
-            (resource, dl_url, j['permalink'])
-        # we need to print msg, because logs from SFTP are dispatched this way
-        print msg
-        if honeypot:
-            honeypot.logDispatch(msg)
+        cfg = config()
+        args = {'shasum': resource, 'url': dl_url, 'permalink': j['permalink']}
 
-        msg = 'virustotalscan %s in %s' % \
-            (resource, json)
-        if honeypot:
-            honeypot.logDispatch(msg)
+        # we don't use dispatcher, so this check is needed
+        if cfg.has_section('database_mysql'):
+            mysql_logger = kippo.dblog.mysql.DBLogger(cfg)
+
+            mysql_logger.handleVirustotal(args)
+
+            args_scan = {'shasum': resource, 'json': json}
+            mysql_logger.handleVirustotalScan(args_scan)
+
+        if origin == 'db':
+            # we don't use dispatcher, so this check is needed
+            if cfg.has_section('database_textlog'):
+                text_logger = kippo.dblog.textlog.DBLogger(cfg)
+                text_logger.handleVirustotalLog('log_from database', args)
         else:
+            msg = 'Virustotal report of %s [%s] at %s' % \
+                (resource, dl_url, j['permalink'])
             # we need to print msg, because logs from SFTP are dispatched this way
             print msg
+            if honeypot:
+                honeypot.logDispatch(msg)
+
     elif j['response_code'] == 0: # file not known
         if origin == 'db':
             return j['response_code']
