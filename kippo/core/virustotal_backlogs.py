@@ -23,17 +23,15 @@ def check():
     r = cursor.execute("""
         SELECT shasum, url, timestamp FROM backlogfiles""")
 
-    cfg = config()
-    apikey = cfg.get('virustotal', 'apikey')
     for record in r:
         shasum = format(record[0])
         url = format(record[1])
 
-        result = virustotal.get_report(apikey, shasum, None, url, None, 'db')
+        result = virustotal.get_report(shasum, None, url, None, 'db')
         if result == 1:
             print "Virustotal backlog record " + shasum + " will be deleted"
             cursor.execute("""
                 DELETE FROM backlogfiles WHERE shasum = ?""", (shasum,) )
-            virustotal.make_comment(apikey, shasum)
+            virustotal.make_comment(shasum)
     dbh.commit()
     cursor.close()

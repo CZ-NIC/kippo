@@ -167,8 +167,7 @@ class command_wget(HoneyPotCommand):
             shutil.move(self.safeoutfile, hash_path)
 
             if cfg.has_option('virustotal', 'apikey'):
-                apikey = cfg.get('virustotal', 'apikey')
-                virustotal.get_report(apikey, shasum, self.fakeoutfile.split('/')[-1], self.url, self.honeypot)
+                virustotal.get_report(shasum, self.fakeoutfile.split('/')[-1], self.url, self.honeypot)
         else:
             print "deleting " + self.safeoutfile + " SHA sum: " + shasum
             os.remove(self.safeoutfile)

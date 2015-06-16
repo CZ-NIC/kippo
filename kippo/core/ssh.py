@@ -383,8 +383,7 @@ class KippoSFTPFile:
                 shutil.move(self.realfile, hash_path)
 
                 if cfg.has_option('virustotal', 'apikey'):
-                    apikey = cfg.get('virustotal', 'apikey')
-                    virustotal.get_report(apikey, shasum, self.filename, 'SFTP')
+                    virustotal.get_report(shasum, self.filename, 'SFTP')
             else:
                 print "deleting " + self.realfile + " with sha sum " + shasum
                 os.remove(self.realfile)

@@ -3,8 +3,10 @@ import urllib2
 import simplejson
 import postfile
 import virustotal_backlogs
+from kippo.core.config import config
 
-def get_report(apikey, resource, filename, dl_url='unknown', honeypot=None, origin=None):
+def get_report(resource, filename, dl_url='unknown', honeypot=None, origin=None):
+    apikey = config().get('virustotal', 'apikey')
     url = "https://www.virustotal.com/vtapi/v2/file/report"
     parameters = {"resource": resource,
                   "apikey":   apikey }
@@ -53,7 +55,8 @@ def get_report(apikey, resource, filename, dl_url='unknown', honeypot=None, orig
         print msg
     return j['response_code']
 
-def make_comment(apikey, resource):
+def make_comment(resource):
+    apikey = config().get('virustotal', 'apikey')
     url = "https://www.virustotal.com/vtapi/v2/comments/put"
     parameters = {"resource": resource,
                    "comment": "captured by ssh honeypot",
