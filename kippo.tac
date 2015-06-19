@@ -21,7 +21,7 @@ if not os.path.exists('kippo.cfg'):
     print 'ERROR: kippo.cfg is missing!'
     sys.exit(1)
 
-from kippo.core import honeypot
+from kippo.core import auth
 from kippo.core import ssh
 from kippo.core.config import config
 
@@ -30,7 +30,7 @@ factory.portal = portal.Portal(ssh.HoneyPotRealm())
 
 rsa_pubKeyString, rsa_privKeyString = ssh.getRSAKeys()
 dsa_pubKeyString, dsa_privKeyString = ssh.getDSAKeys()
-factory.portal.registerChecker(honeypot.HoneypotPasswordChecker())
+factory.portal.registerChecker(auth.HoneypotPasswordChecker())
 factory.publicKeys = {'ssh-rsa': keys.Key.fromString(data=rsa_pubKeyString),
                       'ssh-dss': keys.Key.fromString(data=dsa_pubKeyString)}
 factory.privateKeys = {'ssh-rsa': keys.Key.fromString(data=rsa_privKeyString),

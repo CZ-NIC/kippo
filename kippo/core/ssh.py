@@ -20,7 +20,7 @@ import ttylog, utils, fs, honeypot
 import kippo.core.protocol
 from config import config
 from kippo import core
-from userdb import UserDB
+from kippo.core.auth import UserDB
 
 import hashlib, shutil
 from kippo.core import virustotal
