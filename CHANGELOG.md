@@ -18,7 +18,7 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 * add 'bash -c' support (no effect option)
 * enable support for && multiple commands
 * create uuid to uniquely identify each session
-* log and deny direct-tcpip attempts 
+* log and deny direct-tcpip attempts
 * add "chattr" command
 * support emacs keybindings (c-a, c-b, c-f, c-p, c-n, c-e)
 * add "sync" command
