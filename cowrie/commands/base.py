@@ -2,6 +2,9 @@
 # See the COPYRIGHT file for more information
 
 import os, time, anydbm, datetime
+import functools
+import getopt
+
 from cowrie.core.honeypot import HoneyPotCommand
 from twisted.internet import reactor
 from cowrie.core.config import config
@@ -97,7 +100,20 @@ commands['/usr/bin/who'] = command_who
 
 class command_echo(HoneyPotCommand):
     def call(self):
-        self.writeln(' '.join(self.args))
+        write_fn = self.writeln
+        escape_fn = lambda s: s
+        optlist, args = getopt.getopt(self.args, "eEn")
+
+        for opt in optlist:
+            if opt[0] == '-e':
+                escape_fn = functools.partial(str.decode, encoding="string_escape")
+            elif opt[0] == '-E':
+                escape_fn = lambda s: s
+            elif opt[0] == '-n':
+                write_fn = self.write
+
+        write_fn(escape_fn(' '.join(args)))
+
 commands['/bin/echo'] = command_echo
 
 # for testing purposes
