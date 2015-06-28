@@ -160,7 +160,7 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         @return: The built transport.
         """
 
-        _moduli = '/etc/ssh/moduli'
+        _modulis = '/etc/ssh/moduli', '/private/etc/moduli'
         cfg = config()
 
         t = HoneyPotTransport()
@@ -171,13 +171,15 @@ class HoneyPotSSHFactory(factory.SSHFactory):
 
         t.supportedPublicKeys = self.privateKeys.keys()
 
-        try:
-            self.primes = primes.parseModuliFile( _moduli )
-        except IOError as err:
-            log.err( err )
+        for _moduli in _modulis:
+            try:
+                self.primes = primes.parseModuliFile(_moduli)
+                break
+            except IOError as err:
+                pass
 
         if not self.primes:
-            log.msg( "Disabling diffie-hellman-group-exchange-sha1" )
+            log.msg("Moduli not found, disabling diffie-hellman-group-exchange-sha1")
             ske = t.supportedKeyExchanges[:]
             ske.remove('diffie-hellman-group-exchange-sha1')
             t.supportedKeyExchanges = ske
