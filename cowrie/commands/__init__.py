@@ -19,5 +19,8 @@ __all__ = [
     'malware',
     'which',
     'gcc',
-    'iptables'
+    'iptables',
+    'ethtool',
+    'ifconfig',
+    'nohup'
     ]
