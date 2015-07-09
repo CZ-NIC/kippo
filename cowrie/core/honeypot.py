@@ -6,6 +6,7 @@ import shlex
 import re
 import copy
 import pickle
+from twisted.python import log
 
 from cowrie.core import fs
 from cowrie.core.config import config
@@ -25,7 +26,7 @@ class HoneyPotCommand(object):
         self.exit()
 
     def call(self):
-        self.honeypot.writeln('Hello World! [%s]' % repr(self.args))
+        self.honeypot.writeln('Hello World! [%s]' % (repr(self.args),))
 
     def exit(self):
         self.honeypot.cmdstack.pop()
@@ -37,7 +38,7 @@ class HoneyPotCommand(object):
         self.exit()
 
     def lineReceived(self, line):
-        print 'INPUT: %s' % line
+        log.msg('INPUT: %s' % (line,))
 
     def resume(self):
         pass
@@ -56,9 +57,9 @@ class HoneyPotShell(object):
             }
 
     def lineReceived(self, line):
-        print 'CMD: %s' % line
-        comment = re.compile( '^\s*#' )
-        for i in [x.strip() for x in re.split(';|&&|\n',line.strip())[:10]]:
+        log.msg('CMD: %s' % (line,))
+        comment = re.compile('^\s*#')
+        for i in [x.strip() for x in re.split(';|&&|\n', line.strip())[:10]]:
             if not len(i):
                 continue
             if comment.match(i):
@@ -137,7 +138,7 @@ class HoneyPotShell(object):
             self.honeypot.logDispatch('Command not found: %s' % (line,))
             print 'Command not found: %s' % (line,)
             if len(line):
-                self.honeypot.writeln('bash: %s: command not found' % cmd)
+                self.honeypot.writeln('bash: %s: command not found' % (cmd,))
                 runOrPrompt()
 
     def resume(self):
@@ -256,15 +257,19 @@ class HoneyPotShell(object):
         self.honeypot.terminal.write(newbuf)
 
 class HoneyPotEnvironment(object):
+    """
+    """
     def __init__(self):
         self.cfg = config()
         self.commands = {}
+        self.hostname = self.cfg.get('honeypot', 'hostname')
+
         import cowrie.commands
         for c in cowrie.commands.__all__:
-            module = __import__('cowrie.commands.%s' % c,
+            module = __import__('cowrie.commands.%s' % (c,),
                 globals(), locals(), ['commands'])
             self.commands.update(module.commands)
-        self.fs = pickle.load(file(
-            self.cfg.get('honeypot', 'filesystem_file'), 'rb'))
+
+        self.fs = pickle.load(file(self.cfg.get('honeypot', 'filesystem_file'), 'rb'))
 
 # vim: set sw=4 et:
