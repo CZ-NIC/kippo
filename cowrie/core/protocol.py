@@ -46,8 +46,20 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         else:
             self.clientIP = self.realClientIP
 
-    # this doesn't seem to be called upon disconnect, so please use 
-    # HoneyPotTransport.connectionLost instead
+        if self.cfg.has_option('honeypot', 'internet_facing_ip'):
+            self.kippoIP = self.cfg.get('honeypot', 'internet_facing_ip')
+        else:
+            # Hack to get ip
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                self.kippoIP = s.getsockname()[0]
+                s.close()
+            except:
+                self.kippoIP = '192.168.0.1'
+
+    # this is only called on explicit logout, not on disconnect
+    # this indicates the closing of the channel/session, not the closing of the connection
     def connectionLost(self, reason):
         pass
         # not sure why i need to do this:
