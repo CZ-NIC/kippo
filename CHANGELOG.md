@@ -25,3 +25,6 @@
 * fixes for behavior with non-existent files (cd /test, cat /test/nonexistent, etc)
 * fix for ability to ping/ssh non-existent IP address
 * always send ssh exit-status 0 on exec and shell
+
+This fork might not run on OpenSUSE 11.4 (works fine on 13.1).
+In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo sandbox detecting).
