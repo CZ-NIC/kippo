@@ -173,8 +173,8 @@ interact_port = 5123
 [database_hpfeeds]
 server = hpfriends.honeycloud.net
 port = 20000
-identifier = identifier
-secret = secret
+identifier = x8yer@hp1
+secret = 3wis3l2u5l7r3cew
 debug=true
 
 # XMPP Logging
