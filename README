@@ -6,9 +6,6 @@ zypper in python-twisted
 cp kippo.cfg.dist kippo.cfg
 
 logging to hpfeeds:
-cd kippo/dblog
-wget https://raw.github.com/rep/hpfeeds/master/appsupport/kippo/hpfeeds.py
-
 edit database_hpfeeds section in cfg
 
 logging to mysql:
