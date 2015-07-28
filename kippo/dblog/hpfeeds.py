@@ -204,7 +204,7 @@ class DBLogger(dblog.DBLogger):
 	def createSession(self, peerIP, peerPort, hostIP, hostPort):
 		session = uuid.uuid4().hex
 		self.meta[session] = {'peerIP': peerIP, 'peerPort': peerPort, 
-		'hostIP': hostIP, 'hostPort': hostPort, 'loggedin': None,
+		'hostPort': hostPort, 'loggedin': None,
 		'credentials':[], 'version': None, 'ttylog': None }
 		return session
 
