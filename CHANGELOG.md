@@ -3,6 +3,7 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 
 * log and deny direct-tcpip attempts (micheloosterhof)
 * change exec handling so the command is allowed to run long enough for wget to work (desaster)
+* 2015-07-30 Local syslog output module
 * 2015-02-20 Removed screen clear/reset on logout
 * default behaviour is changed to disable the exit jail
 * sftp support
