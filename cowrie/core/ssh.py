@@ -21,7 +21,7 @@ from twisted.conch.ssh.common import NS, getNS
 
 import ConfigParser
 
-from cowrie.core import ttylog, fs, honeypot, sshserver, connection
+from cowrie.core import ttylog, fs, honeypot, connection
 import cowrie.core.protocol
 from config import config
 from cowrie.core.auth import UserDB
@@ -201,7 +201,7 @@ class HoneyPotRealm:
         else:
             raise Exception, "No supported interfaces found."
 
-class HoneyPotTransport(cowrie.core.sshserver.CowrieSSHServerTransport):
+class HoneyPotTransport(transport.SSHServerTransport):
     """
     @ivar logintime: time of login
 
@@ -228,16 +228,49 @@ class HoneyPotTransport(cowrie.core.sshserver.CowrieSSHServerTransport):
             self.transport.getHost().host, self.transport.getHost().port,
             self.transport.sessionno) )
 
-        cowrie.core.sshserver.CowrieSSHServerTransport.connectionMade(self)
+        self.transport.write('%s\r\n' % (self.ourVersionString,))
+        self.currentEncryptions = transport.SSHCiphers('none', 'none', 'none', 'none')
+        self.currentEncryptions.setKeys('', '', '', '', '', '')
 
     def sendKexInit(self):
         # Don't send key exchange prematurely
         if not self.gotVersion:
             return
-        cowrie.core.sshserver.CowrieSSHServerTransport.sendKexInit(self)
+        transport.SSHServerTransport.sendKexInit(self)
 
     def dataReceived(self, data):
-        cowrie.core.sshserver.CowrieSSHServerTransport.dataReceived(self, data)
+        """
+        First, check for the version string (SSH-2.0-*).  After that has been
+        received, this method adds data to the buffer, and pulls out any
+        packets.
+
+        @type data: C{str}
+        """
+        self.buf = self.buf + data
+        if not self.gotVersion:
+            if not '\n' in self.buf:
+                return
+            self.otherVersionString = self.buf.strip()
+            if self.buf.startswith('SSH-'):
+                self.gotVersion = True
+                remoteVersion = self.buf.split('-')[1]
+                if remoteVersion not in self.supportedVersions:
+                    self._unsupportedVersionReceived(remoteVersion)
+                    return
+                i = self.buf.index('\n')
+                self.buf = self.buf[i+1:]
+                self.sendKexInit()
+            else:
+                self.transport.write('Protocol mismatch.\n')
+                log.msg('Bad protocol version identification: %s' % (self.otherVersionString))
+                self.transport.loseConnection()
+                return
+        packet = self.getPacket()
+        while packet:
+            messageNum = ord(packet[0])
+            self.dispatchMessage(messageNum, packet[1:])
+            packet = self.getPacket()
+
         # later versions seem to call sendKexInit again on their own
         if twisted.version.major < 11 and \
                 not self._hadVersion and self.gotVersion:
@@ -246,7 +279,7 @@ class HoneyPotTransport(cowrie.core.sshserver.CowrieSSHServerTransport):
 
     def ssh_KEXINIT(self, packet):
         print 'Remote SSH version: %s' % (self.otherVersionString,)
-        return cowrie.core.sshserver.CowrieSSHServerTransport.ssh_KEXINIT(self, packet)
+        return transport.SSHServerTransport.ssh_KEXINIT(self, packet)
 
     # this seems to be the only reliable place of catching lost connection
     def connectionLost(self, reason):
@@ -257,7 +290,26 @@ class HoneyPotTransport(cowrie.core.sshserver.CowrieSSHServerTransport):
         if self.ttylog_open:
             ttylog.ttylog_close(self.ttylog_file, time.time())
             self.ttylog_open = False
-        cowrie.core.sshserver.CowrieSSHServerTransport.connectionLost(self, reason)
+        transport.SSHServerTransport.connectionLost(self, reason)
+
+    def sendDisconnect(self, reason, desc):
+        """
+        http://kbyte.snowpenguin.org/portal/2013/04/30/kippo-protocol-mismatch-workaround/
+        Workaround for the "bad packet length" error message.
+
+        @param reason: the reason for the disconnect.  Should be one of the
+                       DISCONNECT_* values.
+        @type reason: C{int}
+        @param desc: a descrption of the reason for the disconnection.
+        @type desc: C{str}
+        """
+        if not 'bad packet length' in desc:
+            transport.SSHServerTransport.sendDisconnect(self, reason, desc)
+        else:
+            self.transport.write('Packet corrupt\n')
+            log.msg('[SERVER] - Disconnecting with error, code %s\nreason: %s' % (reason, desc))
+            self.transport.loseConnection()
+
 
 class HoneyPotSSHSession(session.SSHSession):
 
