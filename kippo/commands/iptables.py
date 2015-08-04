@@ -405,7 +405,7 @@ Try `iptables -h\' or \'iptables --help\' for more information."""
     def bad_argument(self, argument):
         """ Print bad argument and exit """
 
-        self.writeln( """Bad argument \'%s\'' % argument,
+        self.writeln( """Bad argument \'%s\'
 Try `iptables -h\' or \'iptables --help\' for more information.""" 
             % argument )
         self.exit()
