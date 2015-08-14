@@ -142,6 +142,11 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
         print 'Running exec command "%s"' % self.execcmd
         self.cmdstack[0].lineReceived(self.execcmd)
 
+#        self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
+#        self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
+#        return
+#
+
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
     def __init__(self, avatar, env):
