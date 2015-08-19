@@ -433,6 +433,10 @@ class command_php(HoneyPotCommand):
 
     def lineReceived(self, line):
         print 'INPUT (php):', line
+
+    def handle_CTRL_D(self):
+        self.exit()
+
 commands['/usr/bin/php'] = command_php
 
 class command_chmod(HoneyPotCommand):
@@ -513,6 +517,10 @@ class command_perl(HoneyPotCommand):
 
     def lineReceived(self, line):
         print 'INPUT (perl):', line
+
+    def handle_CTRL_D(self):
+        self.exit()
+
 commands['/usr/bin/perl'] = command_perl
 
 class command_init_iptables(HoneyPotCommand):
