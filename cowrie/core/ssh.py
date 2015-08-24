@@ -10,7 +10,6 @@ import struct
 from zope.interface import implementer
 
 import twisted
-from twisted.cred import portal
 from twisted.conch import avatar, interfaces as conchinterfaces
 from twisted.conch.ssh import factory, userauth, keys, session, transport, filetransfer, forwarding
 from twisted.conch.ssh.filetransfer import FXF_READ, FXF_WRITE, FXF_APPEND, FXF_CREAT, FXF_TRUNC, FXF_EXCL
@@ -121,19 +120,11 @@ class HoneyPotSSHFactory(factory.SSHFactory):
             if not x.startswith('database_'):
                 continue
             engine = x.split('_')[1]
-            dbengine = 'database_' + engine
-            lcfg = ConfigParser.SafeConfigParser()
-            lcfg.add_section(dbengine)
-            for i in cfg.options(x):
-                lcfg.set(dbengine, i, cfg.get(x, i))
-            lcfg.add_section('honeypot')
-            for i in cfg.options('honeypot'):
-                lcfg.set('honeypot', i, cfg.get('honeypot', i))
-            print 'Loading dblog engine: %s' % (engine,)
+            log.msg('Loading dblog engine: %s' % (engine,))
             dblogger = __import__(
                 'cowrie.dblog.%s' % (engine,),
-                globals(), locals(), ['dblog']).DBLogger(lcfg)
-            log.startLoggingWithObserver(dblogger.emit, setStdout=False)
+                globals(), locals(), ['dblog']).DBLogger(self.cfg)
+            log.addObserver(dblogger.emit)
             self.dbloggers.append(dblogger)
 
         # load output modules
@@ -142,19 +133,11 @@ class HoneyPotSSHFactory(factory.SSHFactory):
             if not x.startswith('output_'):
                 continue
             engine = x.split('_')[1]
-            output = 'output_' + engine
-            lcfg = ConfigParser.SafeConfigParser()
-            lcfg.add_section(output)
-            for i in cfg.options(x):
-                lcfg.set(output, i, cfg.get(x, i))
-            lcfg.add_section('honeypot')
-            for i in cfg.options('honeypot'):
-                lcfg.set('honeypot', i, cfg.get('honeypot', i))
             log.msg('Loading output engine: %s' % (engine,))
             output = __import__(
-                'cowrie.output.%s' % (engine,),
-                globals(), locals(), ['output']).Output(lcfg)
-            log.startLoggingWithObserver(output.emit, setStdout=False)
+                'cowrie.output.%s' % (engine,)
+                ,globals(), locals(), ['output']).Output(self.cfg)
+            log.addObserver(output.emit)
             self.output_plugins.append(output)
 
     def buildProtocol(self, addr):
@@ -195,7 +178,7 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         t.factory = self
         return t
 
-@implementer(portal.IRealm)
+@implementer(twisted.cred.portal.IRealm)
 class HoneyPotRealm:
 
     def __init__(self):
