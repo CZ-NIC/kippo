@@ -221,7 +221,7 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         return recvline.RecvLine.handle_RETURN(self)
 
     def handle_CTRL_C(self):
-        self.cmdstack[-1].ctrl_c()
+        self.cmdstack[-1].handle_CTRL_C()
 
     def handle_CTRL_D(self):
         self.cmdstack[-1].handle_CTRL_D()
