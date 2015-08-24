@@ -32,8 +32,8 @@ class HoneyPotCommand(object):
         self.honeypot.cmdstack.pop()
         self.honeypot.cmdstack[-1].resume()
 
-    def ctrl_c(self):
-        print 'Received CTRL-C, exiting..'
+    def handle_CTRL_C(self):
+        log.msg('Received CTRL-C, exiting..')
         self.writeln('^C')
         self.exit()
 
@@ -180,7 +180,7 @@ class HoneyPotShell(object):
         attrs = {'path': path}
         self.honeypot.terminal.write(prompt % attrs)
 
-    def ctrl_c(self):
+    def handle_CTRL_C(self):
         self.honeypot.lineBuffer = []
         self.honeypot.lineBufferIndex = 0
         self.honeypot.terminal.nextLine()
