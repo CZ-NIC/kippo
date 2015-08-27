@@ -142,8 +142,7 @@ class command_wget(HoneyPotCommand):
             host, port, factory, bindAddress=out_addr)
         return factory.deferred
 
-    def ctrl_c(self):
-        print '^C'
+    def handle_CTRL_C(self):
         self.writeln('^C')
         self.connection.transport.loseConnection()
 
