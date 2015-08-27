@@ -122,7 +122,7 @@ class command_gcc(HoneyPotCommand):
         else:
             self.no_files()
 
-    def ctrl_c(self):
+    def handle_CTRL_C(self):
         """ Make sure the scheduled call will be canceled """
 
         if getattr(self, 'scheduled', False):
