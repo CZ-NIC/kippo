@@ -12,8 +12,7 @@ from zope.interface import implementer
 import twisted
 
 from twisted.cred.checkers import ICredentialsChecker
-from twisted.cred.credentials import IUsernamePassword, ISSHPrivateKey, \
-    ICredentials
+from twisted.cred.credentials import ISSHPrivateKey
 from twisted.cred.error import UnauthorizedLogin, UnhandledCredentials
 
 from twisted.internet import defer
@@ -22,6 +21,7 @@ from twisted.conch import error
 from twisted.conch.ssh import keys
 
 from cowrie.core.config import config
+from cowrie.core import credentials
 
 # by Walter de Jong <walter@sara.nl>
 class UserDB(object):
@@ -252,38 +252,13 @@ class HoneypotPublicKeyChecker:
         log.msg( 'Public Key attempt for user %s with fingerprint %s' % ( credentials.username, _pubKey.fingerprint() ) )
         return failure.Failure(error.ConchError("Incorrect signature"))
 
-class IUsername(ICredentials):
-    """
-    Encapsulate username only
-
-    @type username: C{str}
-    @ivar username: The username associated with these credentials.
-    """
-
-
-@implementer(IUsername)
-class Username:
-
-    def __init__(self, username):
-        self.username = username
-
-
-# This credential interface also provides an IP address
-@implementer(IUsernamePassword)
-class UsernamePasswordIP:
-
-    def __init__(self, username, password, ip):
-        self.username = username
-        self.password = password
-        self.ip = ip
-
 @implementer(ICredentialsChecker)
 class HoneypotNoneChecker:
     """
     Checker that does no authentication check
     """
 
-    credentialInterfaces = (IUsername,)
+    credentialInterfaces = (credentials.IUsername,)
 
     def __init__(self):
         pass
@@ -297,7 +272,7 @@ class HoneypotPasswordChecker:
     Checker that accepts "keyboard-interactive" and "password"
     """
 
-    credentialInterfaces = (IUsernamePassword,)
+    credentialInterfaces = (credentials.IUsernamePasswordIP,)
 
     def requestAvatarId(self, credentials):
         if hasattr(credentials, 'password'):
