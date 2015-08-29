@@ -668,6 +668,6 @@ class CowrieConnectForwardingChannel(forwarding.SSHConnectForwardingChannel):
 
     def dataReceived(self, data):
         log.msg( "received data %s" % repr( data ))
-
+        self._close("Connection refused")
 
 # vim: set sw=4 et:
