@@ -6,7 +6,7 @@ from cowrie.core.fs import *
 from cowrie.core import virustotal
 from cowrie.core import virustotal_backlogs
 from twisted.web import client
-from twisted.internet import reactor
+from twisted.internet import reactor, ssl
 import stat
 import time
 import urlparse
@@ -18,6 +18,8 @@ import hashlib
 import shutil
 import os.path
 import getopt
+
+from OpenSSL import SSL
 
 commands = {}
 
@@ -118,11 +120,7 @@ class command_wget(HoneyPotCommand):
             host = parsed.hostname
             port = parsed.port or (443 if scheme == 'https' else 80)
             path = parsed.path or '/'
-            if scheme == 'https':
-                self.writeln('Sorry, SSL not supported in this release')
-                self.exit()
-                return None
-            elif scheme != 'http':
+            if scheme != 'http' and scheme != 'https':
                 raise exceptions.NotImplementedError
         except:
             self.writeln('%s: Unsupported scheme.' % (url,))
@@ -138,8 +136,15 @@ class command_wget(HoneyPotCommand):
         out_addr = None
         if self.honeypot.env.cfg.has_option('honeypot', 'out_addr'):
             out_addr = (self.honeypot.env.cfg.get('honeypot', 'out_addr'), 0)
-        self.connection = reactor.connectTCP(
-            host, port, factory, bindAddress=out_addr)
+
+        if scheme == 'https':
+            contextFactory = ssl.ClientContextFactory()
+            contextFactory.method = SSL.SSLv23_METHOD
+            reactor.connectSSL(host, port, factory, contextFactory)
+        else: #can only be http, since we raised an error above for unknown schemes
+            self.connection = reactor.connectTCP(
+                host, port, factory, bindAddress=out_addr)
+
         return factory.deferred
 
     def handle_CTRL_C(self):
