@@ -202,6 +202,7 @@ class HoneyPotFilesystem(object):
             ctime = time.time()
         dir = self.get_path(os.path.dirname(path))
         outfile = os.path.basename(path)
+        print "mkfile path=%s outfile=%s" % (path, outfile)
         if outfile in [x[A_NAME] for x in dir]:
             dir.remove([x for x in dir if x[A_NAME] == outfile][0])
         dir.append([outfile, T_FILE, uid, gid, size, mode, ctime, [],
@@ -286,15 +287,9 @@ class HoneyPotFilesystem(object):
 
         # treat O_RDWR same as O_WRONLY
 
-        print "mode = %s\n" % repr(mode)
-
         if openFlags & os.O_WRONLY == os.O_WRONLY or openFlags & os.O_RDWR == os.O_RDWR:
-            # ensure we do not save with executable bit set
-            realmode = mode & ~(stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-            realmode = realmode | stat.S_IRUSR
-            print "realmode = %s\n" % repr(mode)
-
-            print "fs.open wronly %s " % os.O_WRONLY
+            # strip executable bit
+            hostmode = mode & ~(111)
             safeoutfile = '%s/%s_%s' % \
                        (config().get('honeypot', 'download_path'),
                     time.strftime('%Y%m%d%H%M%S'),
@@ -302,9 +297,8 @@ class HoneyPotFilesystem(object):
             print "fs.open file for writing, saving to %s" % safeoutfile
 
             self.mkfile(filename, 0, 0, 0, stat.S_IFREG | mode)
-            fd = os.open(safeoutfile, openFlags, realmode)
+            fd = os.open(safeoutfile, openFlags, hostmode)
             self.update_realfile(self.getfile(filename), safeoutfile)
-
             return (fd, safeoutfile)
 
         elif openFlags & os.O_RDONLY == os.O_RDONLY:
@@ -322,8 +316,8 @@ class HoneyPotFilesystem(object):
 
     def rmdir(self, path):
         path = path.rstrip('/')
-        parent = '/'.join(path.split('/')[:-1])
-        name = path.split('/')[-1]
+        name = os.path.basename(path)
+        parent = os.path.dirname(path)
         dir = self.getfile(path, follow_symlinks=False)
         if dir == False:
             raise OSError(errno.EEXIST, os.strerror(errno.EEXIST), path)
