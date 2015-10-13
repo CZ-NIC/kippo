@@ -4,17 +4,13 @@
 import os
 import random
 import time
-import struct
 
 from twisted.conch import recvline
-from twisted.conch.ssh import transport
 from twisted.conch.insults import insults
-from twisted.internet import protocol
 from copy import copy
-from kippo.core import ttylog, fs, utils
+from kippo.core import ttylog, utils
 from kippo.core import honeypot
 from kippo.core.config import config
-from kippo import core
 
 class HoneyPotBaseProtocol(insults.TerminalProtocol):
     def __init__(self, avatar, env):
@@ -133,11 +129,6 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
 
         print 'Running exec command "%s"' % self.execcmd
         self.cmdstack[0].lineReceived(self.execcmd)
-
-#        self.terminal.transport.session.conn.sendRequest(self.terminal.transport.session, 'exit-status', struct.pack('>L', 0))
-#        self.terminal.transport.session.conn.sendClose(self.terminal.transport.session)
-#        return
-#
 
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
