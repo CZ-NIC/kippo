@@ -148,7 +148,7 @@ class command_mv(HoneyPotCommand):
             return
 
         try:
-            optlist, args = getopt.gnu_getopt(self.args, '-bfiStTuv')
+            optlist, args = getopt.gnu_getopt(self.args, '-bfinStTuv')
         except getopt.GetoptError as err:
             self.writeln('Unrecognized option')
             self.exit()
