@@ -59,8 +59,7 @@ class command_scp(HoneyPotCommand):
         self.honeypot.terminal.write( '\x00' )
 
     def lineReceived(self, line):
-        log.msg( eventid='KIPP0008', realm='scp', input=line,
-            format='INPUT (%(realm)s): %(input)s' )
+        log.msg('INPUT (%s): %s' % ('scp', line))
         self.honeypot.terminal.write( '\x00' )
 
 commands['/usr/bin/scp'] = command_scp
