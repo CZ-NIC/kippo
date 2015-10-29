@@ -29,6 +29,7 @@
 import getopt
 
 from kippo.core.honeypot import HoneyPotCommand
+from twisted.python import log
 
 commands = {}
 
@@ -42,7 +43,7 @@ class command_scp(HoneyPotCommand):
     def start(self):
         try:
             optlist, args = getopt.getopt(self.args, 'tdv:')
-        except getopt.GetoptError as err:
+        except getopt.GetoptError:
             self.help()
             self.exit()
             return
