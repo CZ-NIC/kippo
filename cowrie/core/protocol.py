@@ -72,9 +72,8 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         class command_txtcmd(honeypot.HoneyPotCommand):
             def call(self):
                 print 'Reading txtcmd from "%s"' % txt
-                f = file(txt, 'r')
-                self.write(f.read())
-                f.close()
+                with open(txt, 'r') as f:
+                    self.write(f.read())
         return command_txtcmd
 
     def getCommand(self, cmd, paths):
@@ -185,8 +184,9 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         endtime = time.strftime('%H:%M',
             time.localtime(time.time()))
         duration = utils.durationHuman(time.time() - self.logintime)
-        utils.addToLastlog('root\tpts/0\t%s\t%s - %s (%s)' % \
-            (self.clientIP, starttime, endtime, duration))
+        with open( '%s/lastlog.txt' % self.cfg.get('honeypot', 'data_path'), 'a') as f:
+            f.write('root\tpts/0\t%s\t%s - %s (%s)\n' % \
+                (self.clientIP, starttime, endtime, duration))
 
     # this doesn't seem to be called upon disconnect, so please use
     # HoneyPotTransport.connectionLost instead
