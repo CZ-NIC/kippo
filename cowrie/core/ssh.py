@@ -469,14 +469,18 @@ def getRSAKeys():
         from twisted.python import randbytes
         KEY_LENGTH = 2048
         rsaKey = RSA.generate(KEY_LENGTH, randbytes.secureRandom)
-        publicKeyString = twisted.conch.ssh.keys.Key(rsaKey).public().toString('openssh')
-        privateKeyString = twisted.conch.ssh.keys.Key(rsaKey).toString('openssh')
-        file(public_key, 'w+b').write(publicKeyString)
-        file(private_key, 'w+b').write(privateKeyString)
+        publicKeyString = keys.Key(rsaKey).public().toString('openssh')
+        privateKeyString = keys.Key(rsaKey).toString('openssh')
+        with open(public_key, 'w+b') as f:
+            f.write(publicKeyString)
+        with open(private_key, 'w+b') as f:
+            f.write(privateKeyString)
         print "done."
     else:
-        publicKeyString = file(public_key).read()
-        privateKeyString = file(private_key).read()
+        with open(public_key, 'r') as f:
+            publicKeyString = f.read()
+        with open(private_key, 'r') as f:
+            privateKeyString = f.read()
     return publicKeyString, privateKeyString
 
 def getDSAKeys():
@@ -489,13 +493,17 @@ def getDSAKeys():
         from twisted.python import randbytes
         KEY_LENGTH = 1024
         dsaKey = DSA.generate(KEY_LENGTH, randbytes.secureRandom)
-        publicKeyString = twisted.conch.ssh.keys.Key(dsaKey).public().toString('openssh')
-        privateKeyString = twisted.conch.ssh.keys.Key(dsaKey).toString('openssh')
-        file(public_key, 'w+b').write(publicKeyString)
-        file(private_key, 'w+b').write(privateKeyString)
+        publicKeyString = keys.Key(dsaKey).public().toString('openssh')
+        privateKeyString = keys.Key(dsaKey).toString('openssh')
+        with open(public_key, 'w+b') as f:
+            f.write(publicKeyString)
+        with open(private_key, 'w+b') as f:
+            f.write(privateKeyString)
     else:
-        publicKeyString = file(public_key).read()
-        privateKeyString = file(private_key).read()
+        with open(public_key, 'r') as f:
+            publicKeyString = f.read()
+        with open(private_key, 'r') as f:
+            privateKeyString = f.read()
     return publicKeyString, privateKeyString
 
 class CowrieSFTPFile:
@@ -521,7 +529,7 @@ class CowrieSFTPFile:
             openFlags |= os.O_TRUNC
         if flags & FXF_EXCL == FXF_EXCL:
             openFlags |= os.O_EXCL
-        if attrs.has_key("permissions"):
+        if "permissions" in attrs:
             mode = attrs["permissions"]
             del attrs["permissions"]
         else:
@@ -621,11 +629,11 @@ class CowrieSFTPServer:
         return os.path.abspath(os.path.join(home, path))
 
     def _setAttrs(self, path, attrs):
-        if attrs.has_key("uid") and attrs.has_key("gid"):
+        if "uid" in attrs and "gid" in attrs:
             self.fs.chown(path, attrs["uid"], attrs["gid"])
-        if attrs.has_key("permissions"):
+        if "permissions" in attrs:
             self.fs.chmod(path, attrs["permissions"])
-        if attrs.has_key("atime") and attrs.has_key("mtime"):
+        if "atime" in attrs and "mtime" in attrs:
             self.fs.utime(path, attrs["atime"], attrs["mtime"])
 
     def _getAttrs(self, s):
