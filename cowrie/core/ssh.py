@@ -2,11 +2,9 @@
 # See the COPYRIGHT file for more information
 
 import os
-import copy
 import time
 import struct
 import uuid
-import struct
 
 from zope.interface import implements
 
@@ -20,15 +18,11 @@ from twisted.conch.openssh_compat import primes
 from twisted.conch.ssh.common import NS, getNS
 from twisted.internet import defer
 
-import ConfigParser
-
-from cowrie.core import ttylog, fs, honeypot, connection
+from cowrie.core import ttylog, honeypot, connection
 from cowrie.core import server
 import cowrie.core.protocol
 from config import config
 from cowrie.core.auth import UserDB
-from cowrie.core import auth
-from twisted.internet import defer
 
 import hashlib, shutil
 from cowrie.core import virustotal
