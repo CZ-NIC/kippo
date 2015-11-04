@@ -42,10 +42,9 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
     def sendBanner(self):
         if self.bannerSent:
             return
-        cfg = config()
         self.bannerSent = True
         try:
-            honeyfs = cfg.get('honeypot', 'contents_path')
+            honeyfs = self.portal.realm.cfg.get('honeypot', 'contents_path')
             issuefile = honeyfs + "/etc/issue.net"
             data = file( issuefile ).read()
         except IOError:
@@ -95,7 +94,7 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
          Convert a list of PAM authentication questions into a
          MSG_USERAUTH_INFO_REQUEST.  Returns a Deferred that will be called
          back when the user has responses to the questions.
-    
+
          @param items: a list of 2-tuples (message, kind).  We only care about
              kinds 1 (password) and 2 (text).
          @type items: C{list}
@@ -133,7 +132,7 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
             string response n
         """
         d, self._pamDeferred = self._pamDeferred, None
-    
+
         try:
             resp = []
             numResps = struct.unpack('>L', packet[:4])[0]
@@ -215,6 +214,8 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         @rtype: L{twisted.conch.ssh.SSHServerTransport}
         @return: The built transport.
         """
+
+        log.msg(" MICHEL: currently open session %s" % self.sessions )
 
         _modulis = '/etc/ssh/moduli', '/private/etc/moduli'
         cfg = config()
@@ -333,6 +334,9 @@ class HoneyPotTransport(transport.SSHServerTransport):
             ttylog.ttylog_close(self.ttylog_file, time.time())
             self.ttylog_open = False
         transport.SSHServerTransport.connectionLost(self, reason)
+        self.transport.connectionLost(reason)
+        self.transport = None
+        log.msg('Connection lost')
 
     def sendDisconnect(self, reason, desc):
         """
@@ -407,16 +411,16 @@ class HoneyPotAvatar(avatar.ConchUser):
         self.username = username
         self.server = server
         self.cfg = self.server.cfg
-        self.env = self.server.env
         self.protocol = None
+        self.IAMAVATAR = server
 
         self.channelLookup.update({'session': HoneyPotSSHSession})
         self.windowSize = [80,24]
         self.channelLookup['direct-tcpip'] = CowrieOpenConnectForwardingClient
 
         # sftp support enabled only when option is explicitly set
-        if self.env.cfg.has_option('honeypot', 'sftp_enabled'):
-            if ( self.env.cfg.get('honeypot', 'sftp_enabled') == "true" ):
+        if self.cfg.has_option('honeypot', 'sftp_enabled'):
+            if ( self.cfg.get('honeypot', 'sftp_enabled') == "true" ):
                 self.subsystemLookup['sftp'] = filetransfer.FileTransferServer
 
         self.uid = self.gid = UserDB().getUID(self.username)
@@ -451,7 +455,9 @@ class HoneyPotAvatar(avatar.ConchUser):
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
     def closed(self):
-        pass
+        if self.protocol:
+            self.protocol.connectionLost("disconnected")
+            self.protocol = None
 
     def eofReceived(self):
         pass

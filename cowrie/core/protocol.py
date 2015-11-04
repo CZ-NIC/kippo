@@ -7,24 +7,32 @@ import time
 
 from twisted.conch import recvline
 from twisted.conch.insults import insults
-from copy import copy
+from twisted.python import log
 from cowrie.core import ttylog, utils
 from cowrie.core import honeypot
 from cowrie.core.config import config
 
 class HoneyPotBaseProtocol(insults.TerminalProtocol):
+
     def __init__(self, avatar):
         self.user = avatar
-        self.env = avatar.env
-        self.cfg = self.env.cfg
+        self.cfg = self.user.cfg
         self.hostname = avatar.server.hostname
         self.fs = avatar.server.fs
         if self.fs.exists(avatar.home):
             self.cwd = avatar.home
         else:
             self.cwd = '/'
+
         # commands is also a copy so we can add stuff on the fly
-        self.commands = copy(self.env.commands)
+        # self.commands = copy.copy(self.commands)
+        self.commands = {}
+        import cowrie.commands
+        for c in cowrie.commands.__all__:
+            module = __import__('cowrie.commands.%s' % (c,),
+                globals(), locals(), ['commands'])
+            self.commands.update(module.commands)
+
         self.password_input = False
         self.cmdstack = []
 
@@ -50,7 +58,6 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         if self.cfg.has_option('honeypot', 'internet_facing_ip'):
             self.kippoIP = self.cfg.get('honeypot', 'internet_facing_ip')
         else:
-            # Hack to get ip
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.connect(("8.8.8.8", 80))
@@ -60,13 +67,16 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
                 self.kippoIP = '192.168.0.1'
 
     # this is only called on explicit logout, not on disconnect
-    # this indicates the closing of the channel/session, not the closing of the connection
+    # this indicates the closing of the channel/session, not the closing of the transport
     def connectionLost(self, reason):
-        pass
-        # not sure why i need to do this:
-        # scratch that, these don't seem to be necessary anymore:
-        #del self.fs
-        #del self.commands
+        self.terminal = None # (this should be done by super below)
+        insults.TerminalProtocol.connectionLost(self, reason)
+        self.cmdstack = None
+        del self.commands
+        self.fs = None
+        self.cfg = None
+        self.user = None
+        log.msg( "honeypot terminal protocol connection lost %s" % reason)
 
     def txtcmd(self, txt):
         class command_txtcmd(honeypot.HoneyPotCommand):
@@ -94,7 +104,7 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
                     path = i
                     break
         txt = os.path.normpath('%s/%s' % \
-            (self.env.cfg.get('honeypot', 'txtcmds_path'), path))
+            (self.cfg.get('honeypot', 'txtcmds_path'), path))
         if os.path.exists(txt) and os.path.isfile(txt):
             return self.txtcmd(txt)
         if path in self.commands:
@@ -143,6 +153,7 @@ class HoneyPotExecProtocol(HoneyPotBaseProtocol):
         print 'Running exec command "%s"' % self.execcmd
         self.cmdstack[0].lineReceived(self.execcmd)
 
+
 class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLine):
 
     def __init__(self, avatar):
@@ -185,7 +196,8 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         endtime = time.strftime('%H:%M',
             time.localtime(time.time()))
         duration = utils.durationHuman(time.time() - self.logintime)
-        utils.addToLastlog('root\tpts/0\t%s\t%s - %s (%s)' % \
+        f = file('%s/lastlog.txt' % self.cfg.get('honeypot', 'data_path'), 'a')
+        f.write('root\tpts/0\t%s\t%s - %s (%s)\n' % \
             (self.clientIP, starttime, endtime, duration))
 
     # this doesn't seem to be called upon disconnect, so please use
@@ -251,8 +263,7 @@ class LoggingServerProtocol(insults.ServerProtocol):
             int(random.random() * 10000))
         print 'Opening TTY log: %s' % transport.ttylog_file
         ttylog.ttylog_open(transport.ttylog_file, time.time())
-
-        transport.ttylog_open = True
+        self.ttylog_open = True
 
         insults.ServerProtocol.connectionMade(self)
         transport.stdinlog_file = '%s/tty/%s-%s.log' % \
@@ -265,14 +276,14 @@ class LoggingServerProtocol(insults.ServerProtocol):
         transport = self.transport.session.conn.transport
         for i in transport.interactors:
             i.sessionWrite(bytes)
-        if transport.ttylog_open and not noLog:
+        if self.ttylog_open and not noLog:
             ttylog.ttylog_write(transport.ttylog_file, len(bytes),
                 ttylog.TYPE_OUTPUT, time.time(), bytes)
         insults.ServerProtocol.write(self, bytes)
 
     def dataReceived(self, data, noLog = False):
         transport = self.transport.session.conn.transport
-        if transport.ttylog_open and not noLog:
+        if self.ttylog_open and not noLog:
             ttylog.ttylog_write(transport.ttylog_file, len(data),
                 ttylog.TYPE_INPUT, time.time(), data)
 
@@ -287,6 +298,14 @@ class LoggingServerProtocol(insults.ServerProtocol):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
+        self.cfg = None
+        log.msg("received call to LSP.connectionLost")
+        transport = self.transport.session.conn.transport
+        if self.ttylog_open:
+            log.msg(eventid='KIPP0012', format='Closing TTY Log: %(ttylog)s',
+                ttylog=transport.ttylog_file)
+            ttylog.ttylog_close(transport.ttylog_file, time.time())
+            self.ttylog_open = False
         insults.ServerProtocol.connectionLost(self, reason)
 
 # vim: set sw=4 et:

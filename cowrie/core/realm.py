@@ -45,23 +45,23 @@ class HoneyPotRealm:
 
     def __init__(self):
         self.cfg = config()
-        self.servers = {}
+        # self.servers = {}
 
     def requestAvatar(self, avatarId, mind, *interfaces):
 
-        if mind in self.servers:
-            log.msg( "Using existing server for mind %s" % mind )
-        else:
-            log.msg( "Starting new server for mind %s" % mind )
-            self.servers[mind] = server.CowrieServer(self.cfg)
+        #if mind in self.servers:
+        #    log.msg( "Using existing server for mind %s" % mind )
+        #else:
+        #    log.msg( "Starting new server for mind %s" % mind )
+        #    self.servers[mind] = server.CowrieServer(self.cfg)
 
-        for i in list(self.servers.keys()):
-            log.msg( "REFCOUNT: key: %s, refcount %d" % ( i, sys.getrefcount(self.servers[i])))
-            log.msg( "Refer: %s" % repr( gc.get_referrers(self.servers[i])))
+        #for i in list(self.servers.keys()):
+        #    log.msg( "REFCOUNT: key: %s, refcount %d" % ( i, sys.getrefcount(self.servers[i])))
+        #    log.msg( "Refer: %s" % repr( gc.get_referrers(self.servers[i])))
 
         if conchinterfaces.IConchUser in interfaces:
             return interfaces[0], \
-                ssh.HoneyPotAvatar(avatarId, self.servers[mind]), lambda: None
+                ssh.HoneyPotAvatar(avatarId, server.CowrieServer(self.cfg)), lambda:None
         else:
             raise Exception, "No supported interfaces found."
 

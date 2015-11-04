@@ -11,6 +11,7 @@ from cowrie.core import fs
 from cowrie.core.config import config
 
 class HoneyPotCommand(object):
+
     def __init__(self, protocol, *args):
         self.protocol = protocol
         self.args = args
@@ -25,7 +26,7 @@ class HoneyPotCommand(object):
         self.exit()
 
     def call(self):
-        self.protocol.writeln('Hello World! [%s]' % (repr(self.args),))
+        self.writeln('Hello World! [%s]' % (repr(self.args),))
 
     def exit(self):
         self.protocol.cmdstack.pop()
@@ -263,17 +264,3 @@ class HoneyPotShell(object):
         self.protocol.lineBufferIndex = len(self.protocol.lineBuffer)
         self.protocol.terminal.write(newbuf)
 
-class HoneyPotEnvironment(object):
-    """
-    """
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.commands = {}
-
-        import cowrie.commands
-        for c in cowrie.commands.__all__:
-            module = __import__('cowrie.commands.%s' % (c,),
-                globals(), locals(), ['commands'])
-            self.commands.update(module.commands)
-
-# vim: set sw=4 et:

@@ -98,7 +98,7 @@ class command_wget(HoneyPotCommand):
 
         self.url = url
         self.limit_size = 0
-        cfg = self.protocol.env.cfg
+        cfg = self.protocol.cfg
         if cfg.has_option('honeypot', 'download_limit_size'):
             self.limit_size = int(cfg.get('honeypot', 'download_limit_size'))
 
@@ -138,8 +138,8 @@ class command_wget(HoneyPotCommand):
         factory = HTTPProgressDownloader(
             self, fakeoutfile, url, outputfile, *args, **kwargs)
         out_addr = None
-        if self.protocol.env.cfg.has_option('honeypot', 'out_addr'):
-            out_addr = (self.protocol.env.cfg.get('honeypot', 'out_addr'), 0)
+        if self.protocol.cfg.has_option('honeypot', 'out_addr'):
+            out_addr = (self.protocol.cfg.get('honeypot', 'out_addr'), 0)
 
         if scheme == 'https':
             contextFactory = ssl.ClientContextFactory()
@@ -169,7 +169,7 @@ class command_wget(HoneyPotCommand):
         print msg
         self.protocol.logDispatch(msg)
 
-        cfg = self.protocol.env.cfg
+        cfg = self.protocol.cfg
         if not os.path.exists(hash_path):
             print "moving " + self.safeoutfile + " -> " + hash_path
             shutil.move(self.safeoutfile, hash_path)
