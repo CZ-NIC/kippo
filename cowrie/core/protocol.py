@@ -113,15 +113,7 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         self.cmdstack.append(obj)
         obj.start()
 
-    def addInteractor(self, interactor):
-        transport = self.terminal.transport.session.conn.transport
-        transport.interactors.append(interactor)
-
-    def delInteractor(self, interactor):
-        transport = self.terminal.transport.session.conn.transport
-        transport.interactors.remove(interactor)
-
-    def uptime(self, reset = None):
+    def uptime(self, reset=None):
         transport = self.terminal.transport.session.conn.transport
         r = time.time() - transport.factory.starttime
         if reset:
@@ -171,6 +163,14 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
             '\x10':     self.handle_UP,		# CTRL-P
             '\x15':     self.handle_CTRL_U,	# CTRL-U
             })
+
+    def addInteractor(self, interactor):
+        transport = self.terminal.transport.session.conn.transport
+        transport.interactors.append(interactor)
+
+    def delInteractor(self, interactor):
+        transport = self.terminal.transport.session.conn.transport
+        transport.interactors.remove(interactor)
 
     def displayMOTD(self):
         try:
