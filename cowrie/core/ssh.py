@@ -165,7 +165,7 @@ class HoneyPotSSHFactory(factory.SSHFactory):
     def __init__(self, cfg):
         self.cfg = cfg
 
-        # protocol^Wwhatever instances are kept here for the interact feature
+        # interactive protocols are kept here for the interact feature
         self.sessions = {}
 
         # for use by the uptime command
