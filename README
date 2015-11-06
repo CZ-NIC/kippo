@@ -3,7 +3,7 @@
 you need to have twisted installed:
 zypper in python-twisted
 
-cp kippo.cfg.dist kippo.cfg
+cp cowrie.cfg.dist cowrie.cfg
 
 logging to hpfeeds:
 edit database_hpfeeds section in cfg
@@ -11,12 +11,12 @@ edit database_hpfeeds section in cfg
 logging to mysql:
 (from http://bruteforce.gr/logging-kippo-events-using-mysql-db.html)
 mysql -u root -p
-> CREATE DATABASE kippo;
-> GRANT ALL ON kippo.* TO 'kippo'@'localhost' IDENTIFIED BY 'password';
+> CREATE DATABASE cowrie;
+> GRANT ALL ON cowrie.* TO 'cowrie'@'localhost' IDENTIFIED BY 'password';
 > exit
 
-mysql -u kippo -p
-> USE kippo;
+mysql -u cowrie -p
+> USE cowrie;
 > source ./doc/sql/mysql.sql;
 > exit
 

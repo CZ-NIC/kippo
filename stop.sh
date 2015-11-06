@@ -1,8 +1,8 @@
 #!/bin/sh
 
-PIDFILE=kippo.pid
+PIDFILE=cowrie.pid
 PID=$(cat $PIDFILE 2>/dev/null)
 if [ -n "$PID" ]; then
-    echo "Stopping Kippo .."
+    echo "Stopping Cowrie .."
     kill -TERM $PID
 fi 

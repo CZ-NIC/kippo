@@ -10,7 +10,7 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 * stdin is saved as a file in dl/ when using exec commands
     to support commands like 'cat >file; ./file'
 * allow wget download over non-80 port
-* simple JSON logging to kippo.json
+* simple JSON logging added
 * accept log and deny publickey authentication
 * add uname -r, -m flags
 * add working sleep command
