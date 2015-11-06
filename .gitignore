@@ -1,5 +1,5 @@
 *.pyc
 private.key
 public.key
-kippo.cfg
-kippo.pid
+cowrie.cfg
+cowrie.pid
