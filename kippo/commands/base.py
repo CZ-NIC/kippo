@@ -314,14 +314,18 @@ commands['/sbin/reboot'] = command_reboot
 
 class command_history(HoneyPotCommand):
     def call(self):
-        if len(self.args) and self.args[0] == '-c':
-            self.honeypot.historyLines = []
-            self.honeypot.historyPosition = 0
-            return
-        count = 1
-        for l in self.honeypot.historyLines:
-            self.writeln(' %s  %s' % (str(count).rjust(4), l))
-            count += 1
+        try:
+            if len(self.args) and self.args[0] == '-c':
+                self.protocol.historyLines = []
+                self.protocol.historyPosition = 0
+                return
+            count = 1
+            for l in self.protocol.historyLines:
+                self.writeln(' %s  %s' % (str(count).rjust(4), l))
+                count += 1
+        except:
+            # non-interactive shell, do nothing
+            pass
 commands['history'] = command_history
 
 class command_date(HoneyPotCommand):
