@@ -7,6 +7,7 @@ import time
 
 from twisted.conch import recvline
 from twisted.conch.insults import insults
+from twisted.python import log
 from copy import copy
 from cowrie.core import ttylog, utils
 from cowrie.core import honeypot
@@ -58,6 +59,11 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
                 s.close()
             except:
                 self.kippoIP = '192.168.0.1'
+
+    def eofReceived(self):
+        log.msg("received eof, sending ctrl-d to command")
+        if len(self.cmdstack):
+            self.cmdstack[-1].handle_CTRL_D()
 
     # this is only called on explicit logout, not on disconnect
     # this indicates the closing of the channel/session, not the closing of the connection
@@ -283,6 +289,10 @@ class LoggingServerProtocol(insults.ServerProtocol):
             f.write(data)
             f.close
         insults.ServerProtocol.dataReceived(self, data)
+
+    def eofReceived(self):
+        if self.terminalProtocol:
+            self.terminalProtocol.eofReceived()
 
     # override super to remove the terminal reset on logout
     def loseConnection(self):
