@@ -391,12 +391,12 @@ class HoneyPotFilesystem(object):
         return os.write(fd, string)
 
     def close(self, fd):
-        if (fd == None):
+        if not fd:
             return True
         return os.close(fd)
 
     def lseek(self, fd, offset, whence):
-        if (fd == None):
+        if not fd:
             return True
         return os.lseek(fd, offset, whence)
 
