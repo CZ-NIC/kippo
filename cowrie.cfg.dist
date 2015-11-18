@@ -257,12 +257,13 @@ debug=true
 
 # Send statics to SANS
 # https://isc.sans.edu/ssh.html
-# You must signup for an api key. 
-
+# You must signup for an api key.
+# Once registered, find your details at: https://isc.sans.edu/myaccount.html
+#
 #[output_dshield]
-#auth_key = auth_key_here 
-#userid = userid_here 
-#batch_size = 100 
+#userid = userid_here
+#auth_key = auth_key_here
+#batch_size = 100
 
 # Local Syslog output module
 #
