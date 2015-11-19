@@ -3,7 +3,12 @@ In that case, dispose commit a693fb18da384ecbf71fdb1b2178292133c4a9ac (Fix kippo
 
 * log and deny direct-tcpip attempts (micheloosterhof)
 * change exec handling so the command is allowed to run long enough for wget to work (desaster)
-* 2015-09-26 keyboard-interactive is back as authentication method, after Twisted removed support initially
+* 2015-11-19 Queued input during commands is now sent to shell to be executed
+             when command is finished
+* 2015-11-18 Added SANS DShield output (Thanks @UnrealAkama)
+* 2015-11-17 Added ElasticSearch output (Thanks @UnrealAkama)
+* 2015-09-26 keyboard-interactive is back as authentication method, after
+             Twisted removed support initially
 * 2015-07-30 Local syslog output module
 * 2015-02-20 Removed screen clear/reset on logout
 * default behaviour is changed to disable the exit jail
