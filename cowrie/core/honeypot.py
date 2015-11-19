@@ -11,6 +11,9 @@ from cowrie.core import fs
 from cowrie.core.config import config
 
 class HoneyPotCommand(object):
+    """
+    """
+
     def __init__(self, protocol, *args):
         self.protocol = protocol
         self.args = args
@@ -20,36 +23,66 @@ class HoneyPotCommand(object):
         self.nextLine = self.protocol.terminal.nextLine
         self.fs = self.protocol.fs
 
+
     def start(self):
+        """
+        """
         self.call()
         self.exit()
 
+
     def call(self):
+        """
+        """
         self.protocol.writeln('Hello World! [%s]' % (repr(self.args),))
 
+
     def exit(self):
+        """
+        """
         self.protocol.cmdstack.pop()
         self.protocol.cmdstack[-1].resume()
 
+
     def handle_CTRL_C(self):
+        """
+        """
         log.msg('Received CTRL-C, exiting..')
         self.writeln('^C')
         self.exit()
 
+
     def lineReceived(self, line):
-        log.msg('INPUT: %s' % (line,))
+        """
+        """
+        log.msg('QUEUED INPUT: %s' % (line,))
+        self.protocol.cmdstack[0].cmdpending.append(line)
+
 
     def resume(self):
+        """
+        """
         pass
+
 
     def handle_TAB(self):
+        """
+        """
         pass
+
 
     def handle_CTRL_D(self):
+        """
+        """
         pass
 
+
+
 class HoneyPotShell(object):
-    def __init__(self, protocol, interactive = True):
+    """
+    """
+
+    def __init__(self, protocol, interactive=True):
         self.protocol = protocol
         self.interactive = interactive
         self.showPrompt()
@@ -58,7 +91,10 @@ class HoneyPotShell(object):
             'PATH':     '/bin:/usr/bin:/sbin:/usr/sbin',
             }
 
+
     def lineReceived(self, line):
+        """
+        """
         log.msg('CMD: %s' % (line,))
         comment = re.compile('^\s*#')
         for i in [x.strip() for x in re.split(';|&&|\n', line.strip())[:10]]:
@@ -72,7 +108,10 @@ class HoneyPotShell(object):
         else:
             self.showPrompt()
 
+
     def runCommand(self):
+        """
+        """
         def runOrPrompt():
             if len(self.cmdpending):
                 self.runCommand()
@@ -95,12 +134,12 @@ class HoneyPotShell(object):
         except:
             self.protocol.writeln(
                 'bash: syntax error: unexpected end of file')
-            # could run runCommand here, but i'll just clear the list instead
+            # Could run runCommand here, but i'll just clear the list instead
             self.cmdpending = []
             self.showPrompt()
             return
 
-        # probably no reason to be this comprehensive for just PATH...
+        # Probably no reason to be this comprehensive for just PATH...
         envvars = copy.copy(self.envvars)
         cmd = None
         while len(cmdAndArgs):
@@ -142,12 +181,18 @@ class HoneyPotShell(object):
                 self.protocol.writeln('bash: %s: command not found' % (cmd,))
                 runOrPrompt()
 
+
     def resume(self):
+        """
+        """
         if self.interactive:
             self.protocol.setInsertMode()
         self.runCommand()
 
+
     def showPrompt(self):
+        """
+        """
         if not self.interactive:
             return
 
@@ -178,18 +223,26 @@ class HoneyPotShell(object):
         attrs = {'path': path}
         self.protocol.terminal.write(prompt % attrs)
 
+
     def handle_CTRL_C(self):
+        """
+        """
         self.protocol.lineBuffer = []
         self.protocol.lineBufferIndex = 0
         self.protocol.terminal.nextLine()
         self.showPrompt()
 
+
     def handle_CTRL_D(self):
+        """
+        """
         log.msg('Received CTRL-D, exiting..')
         self.protocol.call_command(self.protocol.commands['exit'])
 
-    # Tab completion
+
     def handle_TAB(self):
+        """
+        """
         if not len(self.protocol.lineBuffer):
             return
         l = ''.join(self.protocol.lineBuffer)
