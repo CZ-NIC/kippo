@@ -250,6 +250,21 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
 
 
 class LoggingServerProtocol(insults.ServerProtocol):
+    """
+    Wrapper for ServerProtocol that implements TTY logging
+    """
+
+    def __init__(self, prot=None, *a, **kw):
+        insults.ServerProtocol.__init__(self, prot, *a, **kw)
+        self.cfg = a[0].cfg
+        self.dataReceived = 0
+
+        try:
+            self.dataReceivedLimit = int(self.cfg.get('honeypot', 'download_limit_size'))
+        except:
+            self.dataReceivedLimit = 0
+
+
     def connectionMade(self):
         transport = self.transport.session.conn.transport
 
@@ -278,7 +293,14 @@ class LoggingServerProtocol(insults.ServerProtocol):
                 ttylog.TYPE_OUTPUT, time.time(), bytes)
         insults.ServerProtocol.write(self, bytes)
 
+
     def dataReceived(self, data, noLog = False):
+        """
+        """
+        self.dataReceived += len(data)
+        if self.dataReceivedLimit and self.dataReceived > self.dataReceivedLimit:
+            self.transport.loseConnection()
+
         transport = self.transport.session.conn.transport
         if transport.ttylog_open and not noLog:
             ttylog.ttylog_write(transport.ttylog_file, len(data),
