@@ -24,5 +24,6 @@ __all__ = [
     'ifconfig',
     'nohup',
     'netstat',
-    'busybox'
+    'busybox',
+    'sudo'
     ]
