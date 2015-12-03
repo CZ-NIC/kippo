@@ -61,6 +61,9 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
                 self.kippoIP = '192.168.0.1'
 
     def eofReceived(self):
+        """
+        this should probably not go through ctrl-d, but use processprotocol to close stdin
+        """
         log.msg("received eof, sending ctrl-d to command")
         if len(self.cmdstack):
             self.cmdstack[-1].handle_CTRL_D()
