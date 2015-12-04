@@ -3,6 +3,7 @@
 
 __all__ = [
     'base',
+    'free',
     'ls',
     'ping',
     'ssh',
