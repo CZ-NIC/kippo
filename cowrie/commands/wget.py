@@ -269,7 +269,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
                 self.wget.protocol.logDispatch(msg)
             if self.quiet == False:
                 self.wget.writeln('Saving to: `%s' % self.fakeoutfile)
-                self.wget.protocol.terminal.nextLine()
+                self.wget.nextLine()
 
         return client.HTTPDownloader.gotHeaders(self, headers)
 
@@ -317,8 +317,8 @@ class HTTPProgressDownloader(client.HTTPDownloader):
                 ('%s>' % (38 * '='),
                 splitthousands(str(int(self.totallength))).ljust(12),
                 self.speed / 1000))
-            self.wget.protocol.terminal.nextLine()
-            self.wget.protocol.terminal.nextLine()
+            self.wget.nextLine()
+            self.wget.nextLine()
             self.wget.writeln(
                 '%s (%d KB/s) - `%s\' saved [%d/%d]' % \
                 (time.strftime('%Y-%m-%d %H:%M:%S'),
