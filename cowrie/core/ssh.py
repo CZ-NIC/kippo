@@ -99,22 +99,6 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         # for use by the uptime command
         self.starttime = time.time()
 
-        # convert old pass.db root passwords
-        passdb_file = '%s/pass.db' % (cfg.get('honeypot', 'data_path'),)
-        if os.path.exists(passdb_file):
-            userdb = UserDB()
-            print 'pass.db deprecated - copying passwords over to userdb.txt'
-            if os.path.exists('%s.bak' % (passdb_file,)):
-                print 'ERROR: %s.bak already exists, skipping conversion!' % \
-                    (passdb_file,)
-            else:
-                passdb = anydbm.open(passdb_file, 'c')
-                for p in passdb:
-                    userdb.adduser('root', 0, p)
-                passdb.close()
-                os.rename(passdb_file, '%s.bak' % (passdb_file,))
-                print 'pass.db backed up to %s.bak' % (passdb_file,)
-
         # load db loggers
         self.dbloggers = []
         for x in cfg.sections():
