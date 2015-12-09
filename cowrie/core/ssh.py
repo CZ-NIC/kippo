@@ -395,9 +395,6 @@ class HoneyPotSSHSession(session.SSHSession):
     def sendClose(self):
         self.conn.sendClose(self)
 
-    def loseConnection(self):
-        self.conn.sendRequest(self, 'exit-status', "\x00"*4)
-        session.SSHSession.loseConnection(self)
 
     def channelClosed(self):
         log.msg( "Called channelClosed in SSHSession")
@@ -429,18 +426,19 @@ class HoneyPotAvatar(avatar.ConchUser):
         else:
             self.home = '/home/' + username
 
-    def openShell(self, protocol):
+    def openShell(self, processprotocol):
+        log.msg( "openshell: %s" % (repr(processprotocol),) )
         self.protocol = cowrie.core.protocol.LoggingServerProtocol(
             cowrie.core.protocol.HoneyPotInteractiveProtocol, self)
-        self.protocol.makeConnection(protocol)
-        protocol.makeConnection(session.wrapProtocol(self.protocol))
+        self.protocol.makeConnection(processprotocol)
+        processprotocol.makeConnection(session.wrapProtocol(self.protocol))
 
     def getPty(self, terminal, windowSize, attrs):
         print 'Terminal size: %s %s' % windowSize[0:2]
         self.windowSize = windowSize
         return None
 
-    def execCommand(self, protocol, cmd):
+    def execCommand(self, processprotocol, cmd):
         cfg = config()
         # default is enabled
         if cfg.has_option('honeypot', 'exec_enabled'):
@@ -451,8 +449,8 @@ class HoneyPotAvatar(avatar.ConchUser):
         print 'Executing command'
         self.protocol = cowrie.core.protocol.LoggingServerProtocol(
             cowrie.core.protocol.HoneyPotExecProtocol, self, cmd)
-        self.protocol.makeConnection(protocol)
-        protocol.makeConnection(session.wrapProtocol(self.protocol))
+        self.protocol.makeConnection(processprotocol)
+        processprotocol.makeConnection(session.wrapProtocol(self.protocol))
 
     def closed(self):
         pass
