@@ -26,6 +26,10 @@ class DBLogger(dblog.DBLogger):
         self.write(session, 'File SHA sum: %s [%s] -> %s' % \
             (args['shasum'], args['url'], args['outfile']))
 
+    def handleSFTPDownload(self, session, args):
+        self.write(session, 'File SHA sum: %s [SFTP] -> %s' % \
+            (args['shasum'], args['outfile']))
+
     def handleUpdatedFile(self, session, args):
         self.write(session, 'Updated wget outfile %s to %s' % \
             (args['outfile'], args['dl_file']))
