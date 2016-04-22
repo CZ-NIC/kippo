@@ -16,6 +16,7 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
     def __init__(self, avatar, env):
         self.user = avatar
         self.env = env
+        self.cfg = self.env.cfg
         self.hostname = avatar.hostname
         self.fs = avatar.fs
         if self.fs.exists(avatar.home):
@@ -40,9 +41,8 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         self.ttylog_file = transport.ttylog_file
 
         # source IP of client in user visible reports (can be fake or real)
-        cfg = config()
-        if cfg.has_option('honeypot', 'fake_addr'):
-            self.clientIP = cfg.get('honeypot', 'fake_addr')
+        if self.cfg.has_option('honeypot', 'fake_addr'):
+            self.clientIP = self.cfg.get('honeypot', 'fake_addr')
         else:
             self.clientIP = self.realClientIP
 
