@@ -10,7 +10,7 @@ def config():
     cfg.readfp(open(f))
     return cfg
 
-def readConfigFile(cfgfile)
+def readConfigFile(cfgfile):
     cfg = ConfigParser.SafeConfigParser()
     cfg.readfp(open(cfgfile))
     return cfg

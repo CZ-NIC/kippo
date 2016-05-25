@@ -35,7 +35,7 @@ class CowrieServiceMaker(object):
             print 'ERROR: You must not run cowrie as root!'
             sys.exit(1)
 
-        cfg = readConfigFile(options["config"]))
+        cfg = readConfigFile(options["config"])
 
         if cfg.has_option('honeypot', 'listen_addr'):
             listen_addr = cfg.get('honeypot', 'listen_addr')
@@ -50,7 +50,7 @@ class CowrieServiceMaker(object):
         else:
             listen_port = 2222
 
-        factory = core.ssh.HoneyPotSSHFactory(cfg))
+        factory = core.ssh.HoneyPotSSHFactory(cfg)
         factory.portal = portal.Portal(core.ssh.HoneyPotRealm())
         factory.portal.registerChecker(core.auth.HoneypotPublicKeyChecker())
         factory.portal.registerChecker(core.auth.HoneypotPasswordChecker())
