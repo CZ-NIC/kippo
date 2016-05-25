@@ -93,7 +93,7 @@ class HoneyPotShell(object):
 
         line = self.cmdpending.pop(0)
         try:
-	    line = line.replace('>', ' > ').replace('|', ' | ').replace('<',' < ')
+            line = line.replace('>', ' > ').replace('|', ' | ').replace('<',' < ')
             cmdAndArgs = shlex.split(line)
         except:
             self.honeypot.writeln(
