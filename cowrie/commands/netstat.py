@@ -88,7 +88,10 @@ Proto Recv-Q Send-Q Local Address           Foreign Address         State""")
             s_name = str(self.honeypot.kippoIP)
         else:
             s_port = "ssh"
-            c_name = socket.gethostbyaddr(self.honeypot.clientIP)[0][:17]
+            try:
+                c_name = socket.gethostbyaddr(self.honeypot.clientIP)[0][:17]
+            except:
+                c_name = self.honeypot.clientIP
         if self.show_listen or self.show_all:
             self.honeypot.writeln("tcp        0      0 *:ssh                   *:*                     LISTEN")
         if not self.show_listen or self.show_all:
