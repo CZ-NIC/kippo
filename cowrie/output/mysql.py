@@ -131,11 +131,6 @@ class Output(cowrie.core.output.Output):
                 ' WHERE `id` = %s',
                 ('%sx%s' % (args['width'], args['height']), session))
         elif (entry.id == 'KIPP-0011'):
-            ttylog = self.ttylog(session)
-            if ttylog:
-                self.simpleQuery(
-                    'INSERT INTO `ttylog` (`session`, `ttylog`) VALUES (%s, %s)',
-                    (session, self.ttylog(session)))
             self.simpleQuery(
                 'UPDATE `sessions` SET `endtime` = FROM_UNIXTIME(%s)' + \
                 ' WHERE `id` = %s',

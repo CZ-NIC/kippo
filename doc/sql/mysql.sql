@@ -43,13 +43,6 @@ CREATE TABLE `sessions` (
   KEY `starttime` (`starttime`,`sensor`)
 ) ;
 
-CREATE TABLE `ttylog` (
-  `id` int(11) NOT NULL auto_increment,
-  `session` char(32) NOT NULL,
-  `ttylog` mediumblob NOT NULL,
-  PRIMARY KEY  (`id`)
-) ;
-
 CREATE TABLE `downloads` (
   `id` int(11) NOT NULL auto_increment,
   `session` CHAR( 32 ) NOT NULL,

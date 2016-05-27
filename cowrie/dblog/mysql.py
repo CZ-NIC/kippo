@@ -79,11 +79,6 @@ class DBLogger(dblog.DBLogger):
             (sid, self.nowUnix(), id, peerIP))
 
     def handleConnectionLost(self, session, args):
-        ttylog = self.ttylog(session)
-        if ttylog:
-            self.simpleQuery(
-                'INSERT INTO `ttylog` (`session`, `ttylog`) VALUES (%s, %s)',
-                (session, self.ttylog(session)))
         self.simpleQuery(
             'UPDATE `sessions` SET `endtime` = FROM_UNIXTIME(%s)' + \
             ' WHERE `id` = %s',
