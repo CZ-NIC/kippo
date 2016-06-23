@@ -36,6 +36,7 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol):
         transport = self.terminal.transport.session.conn.transport
 
         self.realClientIP = transport.transport.getPeer().host
+        self.realClientPort = transport.transport.getPeer().port
         self.clientVersion = transport.otherVersionString
         self.logintime = time.time()
         self.ttylog_file = transport.ttylog_file
