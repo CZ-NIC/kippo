@@ -127,16 +127,8 @@ commands['exxxit'] = command_exxxit
 
 class command_exit(HoneyPotCommand):
     def call(self):
-        if 'PuTTY' in self.honeypot.clientVersion or \
-                'libssh' in self.honeypot.clientVersion or \
-                'sshlib' in self.honeypot.clientVersion:
-            self.honeypot.terminal.loseConnection()
-            return
-        self.writeln('Connection to server closed.')
-        self.honeypot.hostname = 'localhost'
-        self.honeypot.cwd = '/root'
-        if not self.fs.exists(self.honeypot.cwd):
-            self.honeypot.cwd = '/'
+        self.honeypot.terminal.loseConnection()
+        return
 commands['exit'] = command_exit
 commands['logout'] = command_exit
 
