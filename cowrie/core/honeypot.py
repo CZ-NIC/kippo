@@ -267,8 +267,9 @@ class HoneyPotShell(object):
 class HoneyPotEnvironment(object):
     """
     """
-    def __init__(self):
-        self.cfg = config()
+    def __init__(self, cfg):
+        self.cfg = cfg
+
         self.commands = {}
         self.hostname = self.cfg.get('honeypot', 'hostname')
 

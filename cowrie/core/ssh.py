@@ -23,6 +23,7 @@ from twisted.internet import defer
 import ConfigParser
 
 from cowrie.core import ttylog, fs, honeypot, connection
+from cowrie.core import server
 import cowrie.core.protocol
 from config import config
 from cowrie.core.auth import UserDB
@@ -66,14 +67,15 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
 
     def auth_none(self, packet):
         c = credentials.Username(self.user)
-        return self.portal.login(c, None, conchinterfaces.IConchUser)
+        src_ip = self.transport.transport.getPeer().host
+        return self.portal.login(c, src_ip, conchinterfaces.IConchUser)
 
     # Overridden to pass src_ip to credentials.UsernamePasswordIP
     def auth_password(self, packet):
         password = getNS(packet[1:])[0]
         src_ip = self.transport.transport.getPeer().host
         c = credentials.UsernamePasswordIP(self.user, password, src_ip)
-        return self.portal.login(c, None,
+        return self.portal.login(c, src_ip,
             conchinterfaces.IConchUser).addErrback(self._ebPassword)
 
     def auth_keyboard_interactive(self, packet):
@@ -91,7 +93,7 @@ class HoneyPotSSHUserAuthServer(userauth.SSHUserAuthServer):
             return defer.fail(error.IgnoreAuthentication())
         src_ip = self.transport.transport.getPeer().host
         c = credentials.PluggableAuthenticationModulesIP(self.user, self._pamConv, src_ip)
-        return self.portal.login(c, None,
+        return self.portal.login(c, src_ip,
             conchinterfaces.IConchUser).addErrback(self._ebPassword)
 
     def _pamConv(self, items):
@@ -251,12 +253,14 @@ class HoneyPotRealm:
     implements(twisted.cred.portal.IRealm)
 
     def __init__(self):
-        self.env = honeypot.HoneyPotEnvironment()
+        self.cfg = config()
+        self.myserver = server.CowrieServer(self.cfg)
 
     def requestAvatar(self, avatarId, mind, *interfaces):
+        log.msg( "reqAva: %s" % (repr( mind )))
         if conchinterfaces.IConchUser in interfaces:
             return interfaces[0], \
-                HoneyPotAvatar(avatarId, self.env), lambda: None
+                HoneyPotAvatar(avatarId, self.myserver), lambda: None
         else:
             raise Exception, "No supported interfaces found."
 
@@ -419,11 +423,13 @@ class HoneyPotAvatar(avatar.ConchUser):
     # FIXME: recent twisted conch avatar.py uses IConchuser here
     implements(conchinterfaces.ISession)
 
-    def __init__(self, username, env):
+    def __init__(self, username, server):
         avatar.ConchUser.__init__(self)
         self.username = username
-        self.env = env
-        self.fs = fs.HoneyPotFilesystem(copy.deepcopy(self.env.fs))
+        self.server = server
+        self.cfg = server.cfg
+        self.env = server.env
+        self.fs = server.fs
         self.hostname = self.env.hostname
         self.protocol = None
 
@@ -444,7 +450,7 @@ class HoneyPotAvatar(avatar.ConchUser):
 
     def openShell(self, protocol):
         serverProtocol = cowrie.core.protocol.LoggingServerProtocol(
-            cowrie.core.protocol.HoneyPotInteractiveProtocol, self, self.env)
+            cowrie.core.protocol.HoneyPotInteractiveProtocol, self)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
@@ -463,7 +469,7 @@ class HoneyPotAvatar(avatar.ConchUser):
 
         print 'Executing command'
         serverProtocol = cowrie.core.protocol.LoggingServerProtocol(
-            cowrie.core.protocol.HoneyPotExecProtocol, self, self.env, cmd)
+            cowrie.core.protocol.HoneyPotExecProtocol, self, cmd)
         serverProtocol.makeConnection(protocol)
         protocol.makeConnection(session.wrapProtocol(serverProtocol))
 
