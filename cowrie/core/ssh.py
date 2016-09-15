@@ -249,21 +249,6 @@ class HoneyPotSSHFactory(factory.SSHFactory):
         t.factory = self
         return t
 
-class HoneyPotRealm:
-    implements(twisted.cred.portal.IRealm)
-
-    def __init__(self):
-        self.cfg = config()
-        self.myserver = server.CowrieServer(self.cfg)
-
-    def requestAvatar(self, avatarId, mind, *interfaces):
-        log.msg( "reqAva: %s" % (repr( mind )))
-        if conchinterfaces.IConchUser in interfaces:
-            return interfaces[0], \
-                HoneyPotAvatar(avatarId, self.myserver), lambda: None
-        else:
-            raise Exception, "No supported interfaces found."
-
 class HoneyPotTransport(transport.SSHServerTransport):
     """
     @ivar logintime: time of login
