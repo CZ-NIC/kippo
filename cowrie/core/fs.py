@@ -36,8 +36,9 @@ class FileNotFound(Exception):
     pass
 
 class HoneyPotFilesystem(object):
-    def __init__(self, fs):
+    def __init__(self, fs, cfg):
         self.fs = fs
+        self.cfg = cfg
 
         # keep count of new files, so we can have an artificial limit
         self.newcount = 0
