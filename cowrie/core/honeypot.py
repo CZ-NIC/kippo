@@ -5,7 +5,6 @@ import os
 import shlex
 import re
 import copy
-import pickle
 from twisted.python import log
 
 from cowrie.core import fs
@@ -269,16 +268,12 @@ class HoneyPotEnvironment(object):
     """
     def __init__(self, cfg):
         self.cfg = cfg
-
         self.commands = {}
-        self.hostname = self.cfg.get('honeypot', 'hostname')
 
         import cowrie.commands
         for c in cowrie.commands.__all__:
             module = __import__('cowrie.commands.%s' % (c,),
                 globals(), locals(), ['commands'])
             self.commands.update(module.commands)
-
-        self.fs = pickle.load(file(self.cfg.get('honeypot', 'filesystem_file'), 'rb'))
 
 # vim: set sw=4 et:

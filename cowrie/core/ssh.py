@@ -406,10 +406,8 @@ class HoneyPotAvatar(avatar.ConchUser):
         avatar.ConchUser.__init__(self)
         self.username = username
         self.server = server
-        self.cfg = server.cfg
-        self.env = server.env
-        self.fs = server.fs
-        self.hostname = self.env.hostname
+        self.cfg = self.server.cfg
+        self.env = self.server.env
         self.protocol = None
 
         self.channelLookup.update({'session': HoneyPotSSHSession})
@@ -616,7 +614,7 @@ class CowrieSFTPServer:
 
     def __init__(self, avatar):
         self.avatar = avatar
-        self.fs = self.avatar.fs
+        self.fs = self.avatar.server.fs
 
     def _absPath(self, path):
         home = self.avatar.home
