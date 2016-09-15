@@ -86,7 +86,7 @@ class command_wget(HoneyPotCommand):
             if not len(outfile.strip()) or not urldata.path.count('/'):
                 outfile = 'index.html'
 
-        outfile = self.fs.resolve_path(outfile, self.honeypot.cwd)
+        outfile = self.fs.resolve_path(outfile, self.protocol.cwd)
         path = os.path.dirname(outfile)
         if not path or \
                 not self.fs.exists(path) or \
@@ -98,7 +98,7 @@ class command_wget(HoneyPotCommand):
 
         self.url = url
         self.limit_size = 0
-        cfg = self.honeypot.env.cfg
+        cfg = self.protocol.env.cfg
         if cfg.has_option('honeypot', 'download_limit_size'):
             self.limit_size = int(cfg.get('honeypot', 'download_limit_size'))
 
@@ -138,8 +138,8 @@ class command_wget(HoneyPotCommand):
         factory = HTTPProgressDownloader(
             self, fakeoutfile, url, outputfile, *args, **kwargs)
         out_addr = None
-        if self.honeypot.env.cfg.has_option('honeypot', 'out_addr'):
-            out_addr = (self.honeypot.env.cfg.get('honeypot', 'out_addr'), 0)
+        if self.protocol.env.cfg.has_option('honeypot', 'out_addr'):
+            out_addr = (self.protocol.env.cfg.get('honeypot', 'out_addr'), 0)
 
         if scheme == 'https':
             contextFactory = ssl.ClientContextFactory()
@@ -164,18 +164,18 @@ class command_wget(HoneyPotCommand):
         hash_path = '%s/%s' % (self.download_path, shasum)
 
         msg = '%s SHA sum %s of URL %s in file %s' % \
-            (self.honeypot.realClientIP, shasum,
+            (self.protocol.realClientIP, shasum,
             self.url, self.fileName)
         print msg
-        self.honeypot.logDispatch(msg)
+        self.protocol.logDispatch(msg)
 
-        cfg = self.honeypot.env.cfg
+        cfg = self.protocol.env.cfg
         if not os.path.exists(hash_path):
             print "moving " + self.safeoutfile + " -> " + hash_path
             shutil.move(self.safeoutfile, hash_path)
 
             if cfg.has_option('virustotal', 'apikey'):
-                virustotal.get_report(shasum, self.fakeoutfile.split('/')[-1], self.url, self.honeypot)
+                virustotal.get_report(shasum, self.fakeoutfile.split('/')[-1], self.url, self.protocol)
         else:
             print "deleting " + self.safeoutfile + " SHA sum: " + shasum
             os.remove(self.safeoutfile)
@@ -256,10 +256,10 @@ class HTTPProgressDownloader(client.HTTPDownloader):
             else:
                 msg = 'Saving URL (%s) to %s' % (self.wget.url, self.fileName)
                 print msg
-                self.wget.honeypot.logDispatch(msg)
+                self.wget.protocol.logDispatch(msg)
             if self.quiet == False:
                 self.wget.writeln('Saving to: `%s' % self.fakeoutfile)
-                self.wget.honeypot.terminal.nextLine()
+                self.wget.protocol.terminal.nextLine()
 
         return client.HTTPDownloader.gotHeaders(self, headers)
 
@@ -307,8 +307,8 @@ class HTTPProgressDownloader(client.HTTPDownloader):
                 ('%s>' % (38 * '='),
                 splitthousands(str(int(self.totallength))).ljust(12),
                 self.speed / 1000))
-            self.wget.honeypot.terminal.nextLine()
-            self.wget.honeypot.terminal.nextLine()
+            self.wget.protocol.terminal.nextLine()
+            self.wget.protocol.terminal.nextLine()
             self.wget.writeln(
                 '%s (%d KB/s) - `%s\' saved [%d/%d]' % \
                 (time.strftime('%Y-%m-%d %H:%M:%S'),
