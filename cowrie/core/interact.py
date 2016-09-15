@@ -13,7 +13,7 @@ class Interact(telnet.Telnet):
     def connectionMade(self):
         self.interacting = None
         self.cmdbuf = ''
-        self.honeypotFactory = self.factory.honeypotFactory
+        self.protocolFactory = self.factory.honeypotFactory
 
         # someone tell me if i'm doing this wrong?
         d = self.do(telnet.LINEMODE)
@@ -98,14 +98,14 @@ class Interact(telnet.Telnet):
         except ValueError:
             self.transport.write('** Invalid session ID.\r\n')
             return
-        for s in self.honeypotFactory.sessions:
+        for s in self.protocolFactory.sessions:
             if sessionno == s:
                 self.view(s)
                 return
         self.transport.write('** No such session found.\r\n')
 
     def view(self, sessionno):
-        session = self.honeypotFactory.sessions[sessionno]
+        session = self.protocolFactory.sessions[sessionno]
         self.transport.write(
             '** Attaching to #%d, hit ESC to return\r\n' % sessionno)
         session.addInteractor(self)
@@ -113,8 +113,8 @@ class Interact(telnet.Telnet):
 
     def cmd_list(self, args):
         self.transport.write('ID   clientIP        clientVersion\r\n')
-        for s in self.honeypotFactory.sessions:
-            session = self.honeypotFactory.sessions[s]
+        for s in self.protocolFactory.sessions:
+            session = self.protocolFactory.sessions[s]
             self.transport.write('%s %s %s\r\n' % \
                 (str(s).ljust(4),
                 session.realClientIP.ljust(15),
@@ -138,11 +138,11 @@ class Interact(telnet.Telnet):
         except ValueError:
             self.transport.write('** Invalid session ID.\r\n')
             return
-        for s in self.honeypotFactory.sessions:
+        for s in self.protocolFactory.sessions:
             if sessionno == s:
                 self.transport.write(
                     '** Disconnecting session #%d\r\n' % sessionno)
-                self.honeypotFactory.sessions[s].terminal.loseConnection()
+                self.protocolFactory.sessions[s].terminal.loseConnection()
                 return
         self.transport.write('** No such session found.\r\n')
 

@@ -7,7 +7,7 @@ from cowrie.core.config import config
 import cowrie.dblog.mysql
 import cowrie.dblog.textlog
 
-def get_report(resource, filename, dl_url='unknown', honeypot=None, origin=None):
+def get_report(resource, filename, dl_url='unknown', protocol=None, origin=None):
     apikey = config().get('virustotal', 'apikey')
     url = "https://www.virustotal.com/vtapi/v2/file/report"
     parameters = {"resource": resource,
@@ -41,8 +41,8 @@ def get_report(resource, filename, dl_url='unknown', honeypot=None, origin=None)
                 (resource, dl_url, j['permalink'])
             # we need to print msg, because logs from SFTP are dispatched this way
             print msg
-            if honeypot:
-                honeypot.logDispatch(msg)
+            if protocol:
+                protocol.logDispatch(msg)
 
     elif j['response_code'] == 0: # file not known
         if origin == 'db':

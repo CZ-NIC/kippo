@@ -47,20 +47,20 @@ class command_scp(HoneyPotCommand):
             self.help()
             self.exit()
             return
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
-        self.honeypot.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
 
     def lineReceived(self, line):
         log.msg('INPUT (%s): %s' % ('scp', line))
-        self.honeypot.terminal.write( '\x00' )
+        self.protocol.terminal.write( '\x00' )
 
 commands['/usr/bin/scp'] = command_scp
 

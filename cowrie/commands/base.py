@@ -15,7 +15,7 @@ commands = {}
 
 class command_whoami(HoneyPotCommand):
     def call(self):
-        self.writeln(self.honeypot.user.username)
+        self.writeln(self.protocol.user.username)
 commands['/usr/bin/whoami'] = command_whoami
 commands['/usr/bin/users'] = command_whoami
 
@@ -23,9 +23,9 @@ class command_uptime(HoneyPotCommand):
     def call(self):
         if len(self.args):
             secs = int(self.args[0])
-            self.honeypot.uptime(time.time() - secs)
+            self.protocol.uptime(time.time() - secs)
         self.writeln(' %s up %s,  1 user,  load average: 0.00, 0.00, 0.00' % \
-            (time.strftime('%H:%M:%S'), utils.uptime(self.honeypot.uptime())))
+            (time.strftime('%H:%M:%S'), utils.uptime(self.protocol.uptime())))
 commands['/usr/bin/uptime'] = command_uptime
 
 class command_help(HoneyPotCommand):
@@ -81,21 +81,21 @@ commands['help'] = command_help
 class command_w(HoneyPotCommand):
     def call(self):
         self.writeln(' %s up %s,  1 user,  load average: 0.00, 0.00, 0.00' % \
-            (time.strftime('%H:%M:%S'), utils.uptime(self.honeypot.uptime())))
+            (time.strftime('%H:%M:%S'), utils.uptime(self.protocol.uptime())))
         self.writeln('USER     TTY      FROM              LOGIN@   IDLE   JCPU   PCPU WHAT')
         self.writeln('%-8s pts/0    %s %s    0.00s  0.00s  0.00s w' % \
-            (self.honeypot.user.username,
-            self.honeypot.clientIP[:17].ljust(17),
-            time.strftime('%H:%M', time.localtime(self.honeypot.logintime))))
+            (self.protocol.user.username,
+            self.protocol.clientIP[:17].ljust(17),
+            time.strftime('%H:%M', time.localtime(self.protocol.logintime))))
 commands['/usr/bin/w'] = command_w
 
 class command_who(HoneyPotCommand):
     def call(self):
         self.writeln('%-8s pts/0        %s %s (%s)' % \
-            (self.honeypot.user.username,
-            time.strftime('%Y-%m-%d', time.localtime(self.honeypot.logintime)),
-            time.strftime('%H:%M', time.localtime(self.honeypot.logintime)),
-            self.honeypot.clientIP))
+            (self.protocol.user.username,
+            time.strftime('%Y-%m-%d', time.localtime(self.protocol.logintime)),
+            time.strftime('%H:%M', time.localtime(self.protocol.logintime)),
+            self.protocol.clientIP))
 commands['/usr/bin/who'] = command_who
 
 class command_echo(HoneyPotCommand):
@@ -119,15 +119,15 @@ commands['/bin/echo'] = command_echo
 # for testing purposes
 class command_exxxit(HoneyPotCommand):
     def call(self):
-        if self.honeypot.clientIP.startswith('127.0.0.'):
-            self.honeypot.terminal.loseConnection()
+        if self.protocol.clientIP.startswith('127.0.0.'):
+            self.protocol.terminal.loseConnection()
         else:
             self.writeln('bash: exxxit: command not found')
 commands['exxxit'] = command_exxxit
 
 class command_exit(HoneyPotCommand):
     def call(self):
-        self.honeypot.terminal.loseConnection()
+        self.protocol.terminal.loseConnection()
         return
     def exit(self):
 	pass
@@ -136,18 +136,18 @@ commands['logout'] = command_exit
 
 class command_clear(HoneyPotCommand):
     def call(self):
-        self.honeypot.terminal.reset()
+        self.protocol.terminal.reset()
 commands['/usr/bin/clear'] = command_clear
 commands['/usr/bin/reset'] = command_clear
 
 class command_hostname(HoneyPotCommand):
     def call(self):
-        self.writeln(self.honeypot.hostname)
+        self.writeln(self.protocol.hostname)
 commands['/bin/hostname'] = command_hostname
 
 class command_ps(HoneyPotCommand):
     def call(self):
-        user = self.honeypot.user.username
+        user = self.protocol.user.username
         args = ''
         if len(self.args):
             args = self.args[0].strip()
@@ -209,7 +209,7 @@ commands['/bin/ps'] = command_ps
 
 class command_id(HoneyPotCommand):
     def call(self):
-        u = self.honeypot.user
+        u = self.protocol.user
         self.writeln('uid=%d(%s) gid=%d(%s) groups=%d(%s)' % \
             (u.uid, u.username, u.gid, u.username, u.gid, u.username))
 commands['/usr/bin/id'] = command_id
@@ -217,7 +217,7 @@ commands['/usr/bin/id'] = command_id
 class command_passwd(HoneyPotCommand):
     def start(self):
         self.write('Enter new UNIX password: ')
-        self.honeypot.password_input = True
+        self.protocol.password_input = True
         self.callbacks = [self.ask_again, self.finish]
         self.passwd = None
 
@@ -226,7 +226,7 @@ class command_passwd(HoneyPotCommand):
         self.write('Retype new UNIX password: ')
 
     def finish(self, line):
-        self.honeypot.password_input = False
+        self.protocol.password_input = False
 
         if line != self.passwd or self.passwd == '*':
             self.writeln('Sorry, passwords do not match')
@@ -234,8 +234,8 @@ class command_passwd(HoneyPotCommand):
             return
 
         userdb = UserDB()
-        userdb.adduser(self.honeypot.user.username,
-            self.honeypot.user.uid, self.passwd)
+        userdb.adduser(self.protocol.user.username,
+            self.protocol.user.uid, self.passwd)
 
         self.writeln('passwd: password updated successfully')
         self.exit()
@@ -272,7 +272,7 @@ class command_shutdown(HoneyPotCommand):
             self.nextLine()
             self.writeln(  
                 'Broadcast message from root@%s (pts/0) (%s):' % \
-                (self.honeypot.hostname, time.ctime()))
+                (self.protocol.hostname, time.ctime()))
             self.nextLine()
             self.writeln('The system is going down for maintenance NOW!')
             reactor.callLater(3, self.finish)
@@ -281,7 +281,7 @@ class command_shutdown(HoneyPotCommand):
             self.nextLine()
             self.writeln(  
                 'Broadcast message from root@%s (pts/0) (%s):' % \
-                (self.honeypot.hostname, time.ctime()))
+                (self.protocol.hostname, time.ctime()))
             self.nextLine()
             self.writeln('The system is going down for reboot NOW!')
             reactor.callLater(3, self.finish)
@@ -292,10 +292,10 @@ class command_shutdown(HoneyPotCommand):
             
     def finish(self):
         self.writeln('Connection to server closed.')
-        self.honeypot.hostname = 'localhost'
-        self.honeypot.cwd = '/root'
-        if not self.fs.exists(self.honeypot.cwd):
-            self.honeypot.cwd = '/'
+        self.protocol.hostname = 'localhost'
+        self.protocol.cwd = '/root'
+        if not self.fs.exists(self.protocol.cwd):
+            self.protocol.cwd = '/'
         self.exit()
 commands['/sbin/shutdown'] = command_shutdown
 commands['/sbin/poweroff'] = command_shutdown
@@ -307,18 +307,18 @@ class command_reboot(HoneyPotCommand):
         self.nextLine()
         self.writeln(
             'Broadcast message from root@%s (pts/0) (%s):' % \
-            (self.honeypot.hostname, time.ctime()))
+            (self.protocol.hostname, time.ctime()))
         self.nextLine()
         self.writeln('The system is going down for reboot NOW!')
         reactor.callLater(3, self.finish)
 
     def finish(self):
         self.writeln('Connection to server closed.')
-        self.honeypot.hostname = 'localhost'
-        self.honeypot.cwd = '/root'
-        if not self.fs.exists(self.honeypot.cwd):
-            self.honeypot.cwd = '/'
-        self.honeypot.uptime(time.time())
+        self.protocol.hostname = 'localhost'
+        self.protocol.cwd = '/root'
+        if not self.fs.exists(self.protocol.cwd):
+            self.protocol.cwd = '/'
+        self.protocol.uptime(time.time())
         self.exit()
 commands['/sbin/reboot'] = command_reboot
 
@@ -360,7 +360,7 @@ commands['/usr/bin/yes'] = command_yes
 class command_sh(HoneyPotCommand):
     def call(self):
         if len(self.args) and self.args[0].strip() == '-c':
-            self.honeypot.cmdstack[0].cmdpending.append( ' '.join( self.args[1:] ) )
+            self.protocol.cmdstack[0].cmdpending.append( ' '.join( self.args[1:] ) )
         else:
             pass
 commands['/bin/bash'] = command_sh
@@ -440,7 +440,7 @@ class command_chmod(HoneyPotCommand):
             self.writeln('Try chmod --help for more information.')
             return
         for arg in self.args[1:]:
-            path = self.fs.resolve_path(arg, self.honeypot.cwd)
+            path = self.fs.resolve_path(arg, self.protocol.cwd)
             if not self.fs.exists(path):
                 self.writeln(
                     'chmod: cannot access %s: No such file or directory' % \
