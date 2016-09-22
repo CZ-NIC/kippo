@@ -18,6 +18,7 @@ import hashlib
 import shutil
 import os.path
 import getopt
+import magic
 
 from OpenSSL import SSL
 
@@ -170,11 +171,20 @@ class command_wget(HoneyPotCommand):
         self.honeypot.logDispatch(msg)
 
         cfg = self.honeypot.env.cfg
+        vt_check = 1
+
+        if re.search("\.sh$", self.url):
+            m = magic.open(magic.MAGIC_NONE)
+            m.load()
+            filetype =  m.file(self.safeoutfile)
+            if re.search("ASCII", filetype):
+                vt_check = 0
+
         if not os.path.exists(hash_path):
             print "moving " + self.safeoutfile + " -> " + hash_path
             shutil.move(self.safeoutfile, hash_path)
 
-            if cfg.has_option('virustotal', 'apikey'):
+            if cfg.has_option('virustotal', 'apikey') and vt_check:
                 virustotal.get_report(shasum, self.fakeoutfile.split('/')[-1], self.url, self.honeypot)
         else:
             print "deleting " + self.safeoutfile + " SHA sum: " + shasum
