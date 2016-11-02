@@ -203,7 +203,7 @@ class command_wget(HoneyPotCommand):
     def error(self, error, url):
         if hasattr(error, 'getErrorMessage'): # exceptions
             error = error.getErrorMessage()
-            print "error: " + error
+            print "error: " + unicode(error, errors='replace')
         else:
             print "error"
         self.writeln("ERROR")
