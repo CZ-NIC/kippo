@@ -50,14 +50,9 @@ class HoneyPotRealm:
     def requestAvatar(self, avatarId, mind, *interfaces):
 
         if mind in self.servers:
-            log.msg( "Using existing server for mind %s" % mind )
+            pass
         else:
-            log.msg( "Starting new server for mind %s" % mind )
             self.servers[mind] = server.CowrieServer(self.cfg)
-
-        for i in list(self.servers.keys()):
-            log.msg( "REFCOUNT: key: %s, refcount %d" % ( i, sys.getrefcount(self.servers[i])))
-            log.msg( "Refer: %s" % repr( gc.get_referrers(self.servers[i])))
 
         if conchinterfaces.IConchUser in interfaces:
             return interfaces[0], \
