@@ -121,7 +121,7 @@ class command_exit(HoneyPotCommand):
         self.protocol.terminal.loseConnection()
         return
     def exit(self):
-	pass
+        pass
 commands['exit'] = command_exit
 commands['logout'] = command_exit
 
