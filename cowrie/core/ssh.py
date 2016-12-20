@@ -426,10 +426,10 @@ class HoneyPotAvatar(avatar.ConchUser):
             self.home = '/home/' + username
 
     def openShell(self, protocol):
-        serverProtocol = cowrie.core.protocol.LoggingServerProtocol(
+        self.protocol = cowrie.core.protocol.LoggingServerProtocol(
             cowrie.core.protocol.HoneyPotInteractiveProtocol, self)
-        serverProtocol.makeConnection(protocol)
-        protocol.makeConnection(session.wrapProtocol(serverProtocol))
+        self.protocol.makeConnection(protocol)
+        protocol.makeConnection(session.wrapProtocol(self.protocol))
 
     def getPty(self, terminal, windowSize, attrs):
         print 'Terminal size: %s %s' % windowSize[0:2]
@@ -445,10 +445,10 @@ class HoneyPotAvatar(avatar.ConchUser):
                 raise os.OSError
 
         print 'Executing command'
-        serverProtocol = cowrie.core.protocol.LoggingServerProtocol(
+        self.protocol = cowrie.core.protocol.LoggingServerProtocol(
             cowrie.core.protocol.HoneyPotExecProtocol, self, cmd)
-        serverProtocol.makeConnection(protocol)
-        protocol.makeConnection(session.wrapProtocol(serverProtocol))
+        self.protocol.makeConnection(protocol)
+        protocol.makeConnection(session.wrapProtocol(self.protocol))
 
     def closed(self):
         pass
