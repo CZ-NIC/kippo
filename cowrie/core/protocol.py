@@ -257,7 +257,7 @@ class LoggingServerProtocol(insults.ServerProtocol):
     def __init__(self, prot=None, *a, **kw):
         insults.ServerProtocol.__init__(self, prot, *a, **kw)
         self.cfg = a[0].cfg
-        self.dataReceived = 0
+        self.dataAlreadyReceived = 0
 
         try:
             self.dataReceivedLimit = int(self.cfg.get('honeypot', 'download_limit_size'))
@@ -297,8 +297,8 @@ class LoggingServerProtocol(insults.ServerProtocol):
     def dataReceived(self, data, noLog = False):
         """
         """
-        self.dataReceived += len(data)
-        if self.dataReceivedLimit and self.dataReceived > self.dataReceivedLimit:
+        self.dataAlreadyReceived += len(data)
+        if self.dataReceivedLimit and self.dataAlreadyReceived > self.dataReceivedLimit:
             self.transport.loseConnection()
 
         transport = self.transport.session.conn.transport
