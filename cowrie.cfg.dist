@@ -274,6 +274,13 @@ debug=true
 # [output_localsyslog]
 # facility = USER
 
+# PostgreSQL logging module
+#[database_postgresql]
+#host = localhost
+#database = kippo
+#username = kippo
+#password = password
+#port = 5432
 
 # Splunk SDK output module - EARLY RELEASE NOT RECOMMENDED
 #
