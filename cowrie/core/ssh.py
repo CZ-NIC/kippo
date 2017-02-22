@@ -328,7 +328,7 @@ class HoneyPotTransport(transport.SSHServerTransport):
             self._hadVersion = True
 
     def ssh_KEXINIT(self, packet):
-        print 'Remote SSH version: %s' % (self.otherVersionString,)
+        log.msg('Remote SSH version: %s' % (self.otherVersionString,))
         return transport.SSHServerTransport.ssh_KEXINIT(self, packet)
 
     # this seems to be the only reliable place of catching lost connection
@@ -434,7 +434,7 @@ class HoneyPotAvatar(avatar.ConchUser):
         processprotocol.makeConnection(session.wrapProtocol(self.protocol))
 
     def getPty(self, terminal, windowSize, attrs):
-        print 'Terminal size: %s %s' % windowSize[0:2]
+        log.msg('Terminal size: %s %s' % windowSize[0:2])
         self.windowSize = windowSize
         return None
 
