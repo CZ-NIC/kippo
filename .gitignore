@@ -1,6 +1,0 @@
-*.pyc
-private.key
-public.key
-cowrie.cfg
-cowrie.pid
-twisted/plugins/dropin.cache
